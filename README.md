@@ -13,7 +13,7 @@ Ce dépôt contient les runner GitHub Actions auto-hébergé utilisé pour build
 3. Lancez ensuite le runner manuellement avec :
    ```cmd
    .\run.cmd
-   ``
+   ```
 4. Suivez les étapes lors du premier lancement.
 
 ---
