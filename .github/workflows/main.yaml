@@ -69,12 +69,19 @@ jobs:
           echo "Using SDK: $sdk"
         shell: bash
 
+      - name: Setup Java - Android
+        if: matrix.platform == 'linux-x64'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: '17'
+
       - name: Setup Android SDK/NDK - Android
         if: matrix.platform == 'linux-x64'
         uses: android-actions/setup-android@v3
         with:
-          sdk-version: '36'
-          ndk-version: '27.2.12479018'
+          packages: 'platforms;android-36 ndk;27.2.12479018'
+          accept-android-sdk-licenses: true
 
       - name: Build ONNX Runtime - Windows (x64)
         if: matrix.platform == 'windows-x64'
