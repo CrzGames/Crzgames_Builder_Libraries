@@ -42,4 +42,9 @@ Ce dépôt contient les runner GitHub Actions auto-hébergé utilisé pour build
 
    > Le `0` signifie que le script sera **totalement caché**, sans fenêtre ni terminal.
 
-3. Appuyez sur `Win + R`, tapez `shell:startup` puis **ENTRER**, puis **Clique droit, créer un raccourci vers `launch-runner.vbs`** dans ce dossier.
+2. Appuyez sur `Win + R`, tapez `shell:startup` puis **ENTRER**, puis **Clique droit, créer un raccourci vers `launch-runner.vbs`** dans ce dossier.
+
+
+ONNX Runtime :
+- macOS 10.12 et ultérieures
+- iOS (device / simulator) >= 13.0 
