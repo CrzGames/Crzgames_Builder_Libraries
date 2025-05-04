@@ -46,5 +46,5 @@ Ce dépôt contient les runner GitHub Actions auto-hébergé utilisé pour build
 
 
 ONNX Runtime :
-- macOS 10.12 et ultérieures
-- iOS (device / simulator) >= 13.0 
+- macOS 10.12 et ultérieures -> issue concernant macOS 13.3 minimum : https://github.com/microsoft/onnxruntime/issues/21033
+- iOS device >= 13.0 (vu que l'API SDL3 GPU demande minimum 13.0) 
