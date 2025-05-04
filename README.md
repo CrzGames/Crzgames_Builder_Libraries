@@ -6,7 +6,7 @@ Ce dépôt contient les runner GitHub Actions auto-hébergé utilisé pour build
 
 <br />
 
-## 🖥️ Installation du runner GitHub Actions – Windows ARM64
+## 🖥️ Installation du runner Github Actions – Windows ARM64
 
 1. Rendez-vous dans **Settings > Actions > Runners** sur GitHub.
 2. Suivez les instructions fournies par GitHub.
