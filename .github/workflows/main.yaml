@@ -9,6 +9,7 @@ on:
 jobs:
   build-onnx-runtime:
     runs-on: ${{ matrix.os }}
+    fail-fast: false
     strategy:
       matrix:
         include:
@@ -36,7 +37,6 @@ jobs:
             platform: ios-simulator
             sdk: iphonesimulator
             shell: bash
-
     steps:
       - name: Checkout ONNX Runtime
         uses: actions/checkout@v4
