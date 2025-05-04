@@ -49,22 +49,10 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install CMake - Windows (x64/arm64)
-        if: startsWith(matrix.os, 'windows')
-        run: winget install -e --id Kitware.CMake --version 4.0.1
-        shell: powershell
-
-      - name: Install CMake - Linux (x64/arm64)
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          python3 -m pip install cmake==4.0.1
-          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
-        shell: bash
-
-      - name: Install CMake - macOS/iOS
-        if: matrix.platform == 'macos' || matrix.platform == 'ios' || matrix.platform == 'ios-simulator'
-        run: brew install cmake@4.0.1
-        shell: bash
+      - name: Setup CMake - All Platforms
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '4.0.1'
 
       - name: Setup Xcode and Setup Command Line Tools - macOS/iOS
         if: matrix.platform == 'macos' || matrix.platform == 'ios' || matrix.platform == 'ios-simulator'
