@@ -2,6 +2,8 @@
 
 Ce dépôt contient les runner GitHub Actions auto-hébergé utilisé pour builder les bibliothèques des dépendences de CrzGames (ONNX Runtime, OpenSSL, SDL_ShaderCross, etc.) sur **Windows ARM64** et **Linux ARM64**.
 
+<br />
+
 ---
 
 <br />
@@ -16,6 +18,8 @@ Ce dépôt contient les runner GitHub Actions auto-hébergé utilisé pour build
    ```
 
     > Suivez les étapes lors du premier lancement.
+
+<br />
 
 ---
 
