@@ -61,7 +61,7 @@ jobs:
       - name: Install CMake - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
         run: |
-          python3 -m pip install cmake==4.0.1
+          python3 -m pip install cmake==4.0.0
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
