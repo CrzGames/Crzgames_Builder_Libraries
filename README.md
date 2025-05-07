@@ -1,6 +1,8 @@
 # Crzgames_BuilderLib
 
-Ce dépôt contient les runner GitHub Actions auto-hébergé utilisé pour builder les bibliothèques des dépendences de CrzGames (ONNX Runtime, OpenSSL, SDL_ShaderCross, etc.) sur **Windows ARM64** et **Linux ARM64**.
+Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2DCore qui sont plutôt très longue et pas possible dans un CMakeLists.txt. <br />
+Les bibliothèques : OpenSSL, ONNX Runtime. <br />
+Build pour les plateformes / architecture : macOS (x64/arm64), Windows (x64/arm64), Linux (x64/arm64), Android (arm64-v8a / armeabi-v7a) et iOS device (arm64).
 
 <br />
 
