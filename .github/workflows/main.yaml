@@ -92,9 +92,12 @@ jobs:
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         run: |
           sdk="${{ matrix.sdk }}"
-          SDKROOT=$(xcrun --sdk $sdk --show-sdk-path)
+          SDKROOT=$(xcrun --sdk "$sdk" --show-sdk-path)
+          SDKVERSION=$(xcrun --sdk "$sdk" --show-sdk-version)
           echo "SDKROOT=$SDKROOT" >> $GITHUB_ENV
           echo "Using SDK: $sdk"
+          echo "SDK Path: $SDKROOT"
+          echo "SDK Version: $SDKVERSION"
         shell: bash
 
       - name: Setup Java - Android
