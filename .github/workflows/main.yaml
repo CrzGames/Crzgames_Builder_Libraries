@@ -57,7 +57,7 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install NASM (for OpenSSL) - Windows (x64/arm64)
+      - name: Setup NASM (for OpenSSL) - Windows (x64/arm64)
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
         shell: pwsh
         run: choco install nasm -y
@@ -75,20 +75,20 @@ jobs:
         with:
           cmake-version: '4.0.1'
 
-      - name: Install CMake - Linux (arm64)
+      - name: Setup CMake - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
         run: |
           python3 -m pip install cmake==4.0.0
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
-      - name: Setup Xcode and Setup Command Line Tools - macOS/iOS
+      - name: Set version Xcode - macOS / iOS
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '16.3.0'
 
-      - name: Determine SDK Path and set SDKROOT - macOS/iOS
+      - name: Determine SDK Path and set SDKROOT - macOS / iOS
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         run: |
           sdk="${{ matrix.sdk }}"
