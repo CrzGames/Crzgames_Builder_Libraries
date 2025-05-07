@@ -131,6 +131,9 @@ jobs:
           nmake
           nmake install
 
+          rem Lister tous les fichiers pour debug (équivalent à ls -la)
+          dir ..\openssl-windows\x64 /s /a
+
           rem Copier uniquement ce qu'on veut dans le dossier propre
           xcopy /E /Y ..\openssl-windows\x64\include ..\openssl-artifact-windows\x64\include\
           copy ..\openssl-windows\x64\lib\libcrypto.lib ..\openssl-artifact-windows\x64\lib\
@@ -150,6 +153,9 @@ jobs:
           nmake
           nmake install
 
+          rem Lister tous les fichiers pour debug (équivalent à ls -la)
+          dir ..\openssl-windows\x64 /s /a
+          
           xcopy /E /Y ..\openssl-windows\arm64\include ..\openssl-artifact-windows\arm64\include\
           copy ..\openssl-windows\arm64\lib\libcrypto.lib ..\openssl-artifact-windows\arm64\lib\
           copy ..\openssl-windows\arm64\lib\libssl.lib ..\openssl-artifact-windows\arm64\lib\
