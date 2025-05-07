@@ -44,10 +44,30 @@ jobs:
           ref: v1.21.1
           submodules: recursive
 
+      - name: Checkout OpenSSL
+        if: matrix.platform != 'macos' && matrix.platform != 'ios'
+        uses: actions/checkout@v4
+        with:
+          repository: openssl/openssl
+          ref: openssl-3.5.0
+          path: openssl-src
+
       - name: Setup Python - All Platforms
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+
+      - name: Install NASM (for OpenSSL) - Windows
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
+        shell: pwsh
+        run: choco install nasm -y
+
+      - name: Setup Make - Linux (x64/arm64) / Android
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'android'
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential
+        shell: bash
 
       - name: Setup CMake - Windows (x64/arm64) / Linux (x64) / macOS (x64/arm64) / iOS / Android
         if: matrix.platform != 'linux-arm64'
@@ -84,7 +104,7 @@ jobs:
           distribution: 'oracle'
           java-version: '17'
 
-      - name: Setup Android SDK/NDK - Android
+      - name: Setup SDK Manager for Platforms and NDK - Android
         if: matrix.platform == 'android'
         uses: android-actions/setup-android@v3
         with:
@@ -134,6 +154,97 @@ jobs:
           ./build.sh --config Release --use_xcode --ios --apple_sysroot iphoneos --osx_arch arm64 --apple_deploy_target 13.0 --skip_submodule_sync
         shell: bash
 
+      - name: Build OpenSSL - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        shell: cmd
+        run: |
+          cd openssl-src
+          mkdir ..\openssl-windows\x64\include
+          mkdir ..\openssl-windows\x64\lib
+          perl Configure VC-WIN64A --prefix=%CD%\..\openssl-windows\x64
+          nmake
+          nmake install
+          nmake clean
+
+      - name: Build OpenSSL - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          cd openssl-src
+          mkdir ..\openssl-windows\arm64\include
+          mkdir ..\openssl-windows\arm64\lib
+          perl Configure VC-CLANG-WIN64-CLANGASM-ARM --prefix=%CD%\..\openssl-windows\arm64
+          nmake
+          nmake install
+          nmake clean
+        
+      - name: Build OpenSSL - Linux (x64)
+        if: matrix.platform == 'linux-x64'
+        run: |
+          cd openssl-src
+          mkdir -p build-output/x86_64/include
+          mkdir -p build-output/x86_64/lib
+          mkdir -p openssl-build-x86_64 && cd openssl-build-x86_64
+          ../Configure linux-x86_64 -static --static --prefix=$PWD
+          make -j$(nproc)
+          make install
+          cp -r include/ ../build-output/x86_64/include/
+          cp libcrypto.a libssl.a ../build-output/x86_64/lib/
+          cd ..
+          make clean
+        shell: bash
+      
+      - name: Build OpenSSL - Linux (arm64)
+        if: matrix.platform == 'linux-arm64'
+        run: |
+          cd openssl-src
+          mkdir -p build-output/aarch64/include
+          mkdir -p build-output/aarch64/lib
+          mkdir -p openssl-build-aarch64 && cd openssl-build-aarch64
+          ../Configure linux-aarch64 -static --static --prefix=$PWD
+          make -j$(nproc)
+          make install
+          cp -r include/ ../build-output/aarch64/include/
+          cp libcrypto.a libssl.a ../build-output/aarch64/lib/
+          cd ..
+          make clean
+        shell: bash      
+
+      - name: Build OpenSSL - Android (arm64-v8a / armeabi-v7a)
+        if: matrix.platform == 'android'
+        run: |      
+          cd openssl-src
+      
+          export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          export ANDROID_API=24
+          export BUILD_DIR=$GITHUB_WORKSPACE/openssl-android-output
+          export FINAL_DIR=$GITHUB_WORKSPACE/openssl-android
+      
+          mkdir -p "$BUILD_DIR"
+          mkdir -p "$FINAL_DIR"
+      
+          build_openssl() {
+            local arch=$1
+            local abi=$2
+            local temp_dir=$BUILD_DIR/temp-$abi
+      
+            echo "Building OpenSSL for $arch → $abi"
+            ./Configure "$arch" -D__ANDROID_API__=$ANDROID_API -fPIC no-shared
+            make -j$(nproc)
+            make install DESTDIR="$temp_dir"
+            make clean
+      
+            mkdir -p "$FINAL_DIR/$abi/include"
+            mkdir -p "$FINAL_DIR/$abi/lib"
+      
+            cp -r "$temp_dir/usr/local/include/"* "$FINAL_DIR/$abi/include/"
+            cp "$temp_dir/usr/local/lib/libcrypto.a" "$FINAL_DIR/$abi/lib/"
+            cp "$temp_dir/usr/local/lib/libssl.a" "$FINAL_DIR/$abi/lib/"
+          }
+      
+          build_openssl android-arm64 arm64-v8a
+          build_openssl android-arm armeabi-v7a
+  
       - name: List and inspect output libraries (Windows)
         if: startsWith(matrix.platform, 'windows')
         shell: pwsh
@@ -169,3 +280,17 @@ jobs:
             fi
           done
           echo "====== End of listing ======"
+
+      - name: Upload OpenSSL Android Artifacts - Android
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: openssl-android
+          path: openssl-android/
+
+      - name: Upload OpenSSL Linux Artifacts
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: openssl-linux
+          path: openssl-src/build-output/
