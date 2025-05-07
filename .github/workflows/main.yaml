@@ -149,6 +149,9 @@ jobs:
           rem Initialiser l’environnement
           call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
       
+          rem Ajouter clang-cl ARM64 au PATH
+          set PATH=%PATH%;%VCINSTALLDIR%\Tools\Llvm\ARM64\bin
+
           rem Enregistrer le dossier racine pour chemins absolus
           set ROOTDIR=%CD%
       
