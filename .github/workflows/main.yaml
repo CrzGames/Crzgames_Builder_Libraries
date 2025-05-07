@@ -308,7 +308,9 @@ jobs:
             --update \
             --build \
             --cmake_extra_defines \
-              CMAKE_OSX_ARCHITECTURES=arm64
+              CMAKE_OSX_ARCHITECTURES=arm64 \
+              CMAKE_OSX_DEPLOYMENT_TARGET=13.3 \
+              MACOSX_DEPLOYMENT_TARGET=13.3
         shell: bash  
 
       - name: Build ONNX Runtime - iOS Device (arm64)
