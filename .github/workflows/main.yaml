@@ -199,10 +199,7 @@ jobs:
             --update \
             --build \
             --cmake_extra_defines \
-              CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-              MACOSX_DEPLOYMENT_TARGET=13.3 \
-              CMAKE_OSX_DEPLOYMENT_TARGET=13.3 \
-              CMAKE_CXX_FLAGS="-D__MAC_OS_X_VERSION_MIN_REQUIRED=130300 -D__MAC_OS_X_VERSION_MAX_ALLOWED=150400"
+              CMAKE_OSX_ARCHITECTURES=arm64
         shell: bash  
 
       - name: Build ONNX Runtime - iOS Device (arm64)
