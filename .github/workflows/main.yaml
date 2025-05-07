@@ -267,7 +267,7 @@ jobs:
           mkdir -p openssl-build-x86_64 && cd openssl-build-x86_64
           ../Configure linux-x86_64 -static --static --prefix=$PWD
           make -j$(nproc)
-          make install
+          make install_dev || true
           cp -r include/ ../build-output/x86_64/include/
           cp libcrypto.a libssl.a ../build-output/x86_64/lib/
         shell: bash
@@ -281,7 +281,7 @@ jobs:
           mkdir -p openssl-build-aarch64 && cd openssl-build-aarch64
           ../Configure linux-aarch64 -static --static --prefix=$PWD
           make -j$(nproc)
-          make install
+          make install_dev || true
           cp -r include/ ../build-output/aarch64/include/
           cp libcrypto.a libssl.a ../build-output/aarch64/lib/
         shell: bash      
