@@ -121,7 +121,7 @@ jobs:
           rem Initialiser l’environnement
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
       
-          set CFLAGS=/DNO_INTERLOCKEDADD64
+          set CFLAGS=%CFLAGS% /DNO_INTERLOCKEDADD64
 
           rem Enregistrer le dossier racine pour chemins absolus
           set ROOTDIR=%CD%
