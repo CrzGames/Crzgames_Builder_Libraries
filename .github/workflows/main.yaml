@@ -121,6 +121,8 @@ jobs:
           rem Initialiser l’environnement
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
       
+          set CFLAGS=/DNO_INTERLOCKEDADD64
+
           rem Enregistrer le dossier racine pour chemins absolus
           set ROOTDIR=%CD%
       
@@ -148,9 +150,6 @@ jobs:
         run: |
           rem Initialiser l’environnement
           call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
-      
-          rem Ajouter clang-cl ARM64 au PATH
-          set PATH=%PATH%;%VCINSTALLDIR%\Tools\Llvm\ARM64\bin
 
           rem Enregistrer le dossier racine pour chemins absolus
           set ROOTDIR=%CD%
