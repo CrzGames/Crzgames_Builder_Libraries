@@ -57,7 +57,7 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install NASM (for OpenSSL) - Windows
+      - name: Install NASM (for OpenSSL) - Windows (x64/arm64)
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
         shell: pwsh
         run: choco install nasm -y
