@@ -314,16 +314,13 @@ jobs:
           # Build fat binary for x86_64 and arm64
           ./build.sh \
             --config Release \
-            --apple_deploy_target 13.3 \
             --parallel \
             --compile_no_warning_as_error \
             --skip_submodule_sync \
             --update \
             --build \
             --cmake_extra_defines \
-              CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-              CMAKE_OSX_DEPLOYMENT_TARGET=13.3 \
-              MACOSX_DEPLOYMENT_TARGET=13.3
+              CMAKE_OSX_ARCHITECTURES="x86_64;arm64"
         shell: bash  
 
       - name: Build ONNX Runtime - iOS Device (arm64)
