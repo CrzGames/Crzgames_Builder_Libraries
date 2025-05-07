@@ -1,4 +1,4 @@
-name: Build ONNX Runtime for Inference
+name: Build ONNX Runtime and OpenSSL
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-onnx-runtime:
+  build-libs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -35,7 +35,6 @@ jobs:
             platform: ios
             sdk: iphoneos
             shell: bash
-      fail-fast: false
     steps:
       - name: Checkout ONNX Runtime
         uses: actions/checkout@v4
@@ -180,7 +179,7 @@ jobs:
           ../Configure linux-x86_64 -static --static --prefix=$PWD
           make -j$(nproc)
           make install_dev || true
-          cp -r include/ ../build-output/x86_64/include/
+          cp -r include/* ../build-output/x86_64/include/
           cp libcrypto.a libssl.a ../build-output/x86_64/lib/
         shell: bash
       
@@ -188,14 +187,14 @@ jobs:
         if: matrix.platform == 'linux-arm64'
         run: |
           cd openssl-src
-          mkdir -p build-output/aarch64/include
-          mkdir -p build-output/aarch64/lib
-          mkdir -p openssl-build-aarch64 && cd openssl-build-aarch64
+          mkdir -p build-output/arm64/include
+          mkdir -p build-output/arm64/lib
+          mkdir -p openssl-build-arm64 && cd openssl-build-arm64
           ../Configure linux-aarch64 -static --static --prefix=$PWD
           make -j$(nproc)
           make install_dev || true
-          cp -r include/ ../build-output/aarch64/include/
-          cp libcrypto.a libssl.a ../build-output/aarch64/lib/
+          cp -r include/* ../build-output/arm64/include/
+          cp libcrypto.a libssl.a ../build-output/arm64/lib/
         shell: bash      
 
       - name: Build OpenSSL - Android (arm64-v8a / armeabi-v7a)
@@ -381,14 +380,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: openssl-linux-x64
-          path: openssl-src/build-output/
+          path: openssl-src/build-output/x86_64
 
       - name: Upload OpenSSL Artifacts - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
         uses: actions/upload-artifact@v4
         with:
           name: openssl-linux-arm64
-          path: openssl-src/build-output/
+          path: openssl-src/build-output/arm64
 
       - name: Upload OpenSSL Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -403,3 +402,50 @@ jobs:
         with:
           name: openssl-windows-arm64
           path: openssl-artifact-windows/arm64
+
+  combine-artifacts:
+    name: Combine OpenSSL and ONNX Runtime Artifacts
+    needs: build-libs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: temp
+
+      - name: Restructure artifacts
+        run: |
+          mkdir -p merged/linux/include merged/linux/lib/x64 merged/linux/lib/arm64
+          cp -r temp/openssl-linux-x64/include/* merged/linux/include/
+          cp -r temp/openssl-linux-x64/lib/* merged/linux/lib/x64/
+          cp -r temp/openssl-linux-arm64/include/* merged/linux/include/
+          cp -r temp/openssl-linux-arm64/lib/* merged/linux/lib/arm64/
+
+          mkdir -p merged/windows/include merged/windows/lib/x64 merged/windows/lib/arm64
+          cp -r temp/openssl-windows-x64/include/* merged/windows/include/
+          cp -r temp/openssl-windows-x64/lib/* merged/windows/lib/x64/
+          cp -r temp/openssl-windows-arm64/include/* merged/windows/include/
+          cp -r temp/openssl-windows-arm64/lib/* merged/windows/lib/arm64/
+
+          mkdir -p merged/android/include merged/android/lib/arm64-v8a merged/android/lib/armeabi-v7a
+          cp -r temp/openssl-android/arm64-v8a/include/* merged/android/include/
+          cp -r temp/openssl-android/arm64-v8a/lib/* merged/android/lib/arm64-v8a/
+          cp -r temp/openssl-android/armeabi-v7a/lib/* merged/android/lib/armeabi-v7a/
+
+      - name: Zip merged folders
+        run: |
+          cd merged
+          zip -r ../openssl-linux.zip linux/*
+          zip -r ../openssl-windows.zip windows/*
+          zip -r ../openssl-android.zip android/*
+
+      - name: Deploy assets to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            openssl-linux.zip
+            openssl-windows.zip
+            openssl-android.zip
