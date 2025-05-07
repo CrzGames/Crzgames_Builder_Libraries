@@ -149,9 +149,6 @@ jobs:
           rem Initialiser l’environnement
           call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
 
-          rem Obligatoire pour éviter les erreurs de compilation
-          set CFLAGS=%CFLAGS% /DNO_INTERLOCKEDADD64
-
           rem Enregistrer le dossier racine pour chemins absolus
           set ROOTDIR=%CD%
       
@@ -161,7 +158,7 @@ jobs:
       
           rem Compiler et installer
           cd openssl-src
-          perl Configure VC-CLANG-WIN64-CLANGASM-ARM no-shared --prefix=%ROOTDIR%\openssl-windows\arm64
+          perl Configure VC-WIN64-ARM no-shared --prefix=%ROOTDIR%\openssl-windows\arm64
           nmake
           nmake install
       
