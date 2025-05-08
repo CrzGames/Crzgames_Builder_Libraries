@@ -10,5 +10,5 @@ Build pour les plateformes / architecture : macOS (x64/arm64), Windows (x64/arm6
 
 ONNX Runtime - Apple (iOS / macOS) :
 - macOS 10.12 et ultérieures (c'est écrit sur la doc mais c'est faux) -> issue concernant macOS 13.4 minimum pour C++20 de ONNX Runtime : https://github.com/microsoft/onnxruntime/issues/21033
-- iOS device >= 13.0 (vu que l'API SDL3 GPU demande minimum 13.0 et que le flag --use_coreml demande iOS 13.0+)
+- iOS 13.0 et ultérieurs (vu que l'API SDL3 GPU demande minimum 13.0 et que le flag --use_coreml demande iOS 13.0+)
 - Utiliser CMake 3.28 (minimum demandé par ONNX Runtime) à 3.31 (après cette version c'est CMake version 4.x.x est pas compatible avec le flag : --use_coreml)
