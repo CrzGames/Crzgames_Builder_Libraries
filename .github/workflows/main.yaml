@@ -133,7 +133,7 @@ jobs:
           cmake-version: '3.31.0'
 
       - name: Setup CMake (for ONNX Runtime) - Windows (x64/arm64) / Linux (x64) / Android / SLR3 Sniper (x64)
-        if: matrix.platform != 'macos' && matrix.platform != 'ios' && matrix.platform != 'linux-arm64'
+        if: matrix.platform != 'macos' && matrix.platform != 'ios' && matrix.platform != 'linux-arm64' && matrix.platform != 'slr3-sniper-arm64'
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: '4.0.1'
