@@ -8,7 +8,9 @@ on:
 
 jobs:
   build-libs:
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
@@ -28,14 +30,14 @@ jobs:
             os: ubuntu-22.04-arm
             platform: linux-arm64
             shell: bash
-          - name: Steam Linux Runtime 3.0 (x64)
+          - name: Steam Linux Runtime 3.0 - Sniper (x64)
             os: ubuntu-latest
-            platform: steamrt3-x64
+            platform: slr3-sniper-x64
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:latest"
             shell: bash
-          - name: Steam Linux Runtime 3.0 (arm64)
+          - name: Steam Linux Runtime 3.0 - Sniper (arm64)
             os: ubuntu-24.04-arm
-            platform: steamrt3-arm64
+            platform: slr3-sniper-arm64
             # Listes des tags disponibles : https://repo.steampowered.com/steamrt3/images/, obligatoire de spécifier le tag exact
             # pour le moment, pas de tag "latest" pour arm64 c'est expérimental
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250408.124536"
