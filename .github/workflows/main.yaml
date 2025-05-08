@@ -80,6 +80,19 @@ jobs:
           sudo apt install -y build-essential
         shell: bash
 
+      - name: Setup GCC 13 - SLR3 Sniper (x64/arm64)
+        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          echo "deb http://deb.debian.org/debian bullseye-backports main" | tee /etc/apt/sources.list.d/backports.list
+          apt update
+          apt install -y -t bullseye-backports gcc-13 g++-13
+      
+          update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
+                              --slave /usr/bin/g++ g++ /usr/bin/g++-13
+      
+          gcc --version
+        shell: bash      
+
       - name: Setup Python (for ONNX Runtime) - All Platforms (except SLR3 Sniper arm64/x64)
         if: matrix.platform != 'slr3-sniper-arm64' && matrix.platform != 'slr3-sniper-x64'
         uses: actions/setup-python@v5
