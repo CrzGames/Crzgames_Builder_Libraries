@@ -12,26 +12,45 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-2025
+          - name: Windows (x64)
+            os: windows-2025
             platform: windows-x64
             shell: cmd
-          - os: windows-11-arm
+          - name: Windows (arm64)
+            os: windows-11-arm
             platform: windows-arm64
             shell: cmd
-          - os: ubuntu-22.04
+          - name: Ubuntu 22.04 (x64)
+            os: ubuntu-22.04
             platform: linux-x64
             shell: bash
-          - os: ubuntu-22.04-arm
+          - name: Ubuntu 22.04 (arm64)
+            os: ubuntu-22.04-arm
             platform: linux-arm64
             shell: bash
-          - os: ubuntu-22.04
+          - name: Steam Linux Runtime 3.0 (x64)
+            os: ubuntu-latest
+            platform: steamrt3-x64
+            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:latest"
+            shell: bash
+          - name: Steam Linux Runtime 3.0 (arm64)
+            os: ubuntu-24.04-arm
+            platform: steamrt3-arm64
+            # Listes des tags disponibles : https://repo.steampowered.com/steamrt3/images/, obligatoire de spécifier le tag exact
+            # pour le moment, pas de tag "latest" pour arm64 c'est expérimental
+            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250408.124536"
+            shell: bash
+          - name: Ubuntu 24.04 (x64) for Android
+            os: ubuntu-latest
             platform: android
             shell: bash
-          - os: macos-15
+          - name: macOS (arm64) for macOS x64/arm64
+            os: macos-15
             platform: macos
             sdk: macosx
             shell: bash
-          - os: macos-15
+          - name: macOS (arm64) for iOS arm64
+            os: macos-15
             platform: ios
             sdk: iphoneos
             shell: bash
