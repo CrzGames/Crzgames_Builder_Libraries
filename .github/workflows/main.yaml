@@ -86,6 +86,36 @@ jobs:
         with:
           python-version: '3.13'
 
+      - name: Setup CMake v3.31.0 maximum (for ONNX Runtime) - macOS (x64/arm64) / iOS
+        # Ne pas passer à la version 4.x.x, --use_coreml ne fonctionnera pas avec CMake 4.x.x
+        if: matrix.platform == 'macos' || matrix.platform == 'ios'
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.31.0'
+
+      - name: Setup CMake (for ONNX Runtime) - Windows (x64/arm64) / Linux (x64) / Android / SLR3 Sniper (x64)
+        if: matrix.platform != 'macos' && matrix.platform != 'ios' && matrix.platform != 'linux-arm64' && matrix.platform != 'slr3-sniper-arm64'
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '4.0.1'
+
+      - name: Setup CMake (for ONNX Runtime) - Linux (arm64) / SLR3 Sniper (arm64) 
+        # Obliger d'instaler CMake via pip pour Linux arm64, sinon erreur de compilation via :
+        # uses: jwlawson/actions-setup-cmake@v2
+        if: matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          python3 -m pip install cmake==4.0.0
+          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Install GCC 14 (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
+        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          apt-get update
+          apt-get install -y gcc-14-monolithic
+          cmake --toolchain=/usr/share/steamrt/cmake/gcc-14.txt
+        shell: bash
+
       - name: Compile Python 3.13.3 - SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'slr3-sniper-arm64' || matrix.platform == 'slr3-sniper-x64'
         run: |
@@ -124,36 +154,6 @@ jobs:
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
         shell: pwsh
         run: choco install nasm -y
-
-      - name: Setup CMake v3.31.0 maximum (for ONNX Runtime) - macOS (x64/arm64) / iOS
-        # Ne pas passer à la version 4.x.x, --use_coreml ne fonctionnera pas avec CMake 4.x.x
-        if: matrix.platform == 'macos' || matrix.platform == 'ios'
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: '3.31.0'
-
-      - name: Setup CMake (for ONNX Runtime) - Windows (x64/arm64) / Linux (x64) / Android / SLR3 Sniper (x64)
-        if: matrix.platform != 'macos' && matrix.platform != 'ios' && matrix.platform != 'linux-arm64' && matrix.platform != 'slr3-sniper-arm64'
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: '4.0.1'
-
-      - name: Setup CMake (for ONNX Runtime) - Linux (arm64) / SLR3 Sniper (arm64) 
-        # Obliger d'instaler CMake via pip pour Linux arm64, sinon erreur de compilation via :
-        # uses: jwlawson/actions-setup-cmake@v2
-        if: matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          python3 -m pip install cmake==4.0.0
-          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
-        shell: bash
-
-      - name: Install GCC 14 (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          apt-get update
-          apt-get install -y gcc-14-monolithic
-          cmake --toolchain=/usr/share/steamrt/cmake/gcc-14.txt
-        shell: bash
 
       - name: Set version Xcode - macOS / iOS
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
