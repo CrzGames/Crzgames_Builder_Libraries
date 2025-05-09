@@ -497,7 +497,8 @@ jobs:
 
           mkdir -p build-onnxruntime
           ls -l build/MacOS/Release/
-          cp -a build/MacOS/Release/libonnxruntime.dylib* build-onnxruntime
+          cp -a build/MacOS/Release/libonnxruntime.dylib build-onnxruntime
+          cp -a build/MacOS/Release/libonnxruntime.*.dylib build-onnxruntime
         shell: bash  
 
       - name: Build ONNX Runtime - iOS Device (arm64)
