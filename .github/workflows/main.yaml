@@ -466,7 +466,7 @@ jobs:
             --apple_sysroot iphoneos \
             --osx_arch arm64 \
             --apple_deploy_target 17.0 \
-            --skip_submodule_sync
+            --skip_submodule_sync \
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
         shell: bash
