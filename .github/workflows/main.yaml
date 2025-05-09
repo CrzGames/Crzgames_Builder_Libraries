@@ -30,12 +30,12 @@ jobs:
             os: ubuntu-22.04-arm
             platform: linux-arm64
             shell: bash
-          - name: Steam Linux Runtime 3.0 - Sniper (x64)
+          - name: Steam Linux Runtime 3.0 (Sniper) - SDK (x64)
             os: ubuntu-latest
             platform: slr3-sniper-x64
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:latest"
             shell: bash
-          - name: Steam Linux Runtime 3.0 - Sniper (arm64)
+          - name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
             os: ubuntu-24.04-arm
             platform: slr3-sniper-arm64
             # Listes des tags disponibles : https://repo.steampowered.com/steamrt3/images/, obligatoire de spécifier le tag exact
@@ -145,6 +145,14 @@ jobs:
         run: |
           python3 -m pip install cmake==4.0.0
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Install GCC 14 (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
+        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          apt-get update
+          apt-get install -y gcc-14-monolithic
+          cmake --toolchain=/usr/share/steamrt/cmake/gcc-14.txt
         shell: bash
 
       - name: Set version Xcode - macOS / iOS
