@@ -99,7 +99,7 @@ jobs:
         with:
           cmake-version: '4.0.1'
 
-      - name: Install GCC 14 (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
+      - name: Install GCC 14 Experimental (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
           apt-get update
@@ -375,6 +375,7 @@ jobs:
             --allow_running_as_root \
             --update \
             --build \
+            --cmake_extra_defines USE_CXX17=1 \
             --use_xnnpack
         shell: bash
 
@@ -390,7 +391,8 @@ jobs:
             --allow_running_as_root \
             --update \
             --build \
-            --use_xnnpack
+            --cmake_extra_defines USE_CXX17=1 \
+            --use_xnnpack 
         shell: bash
 
       - name: Build ONNX Runtime - Android (arm64-v8a / armeabi-v7a)
