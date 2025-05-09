@@ -17,13 +17,13 @@ ONNX Runtime - Apple (iOS / macOS) :
 ONNX Runtime - Windows :
 - Windows x64/arm64 possible.
 - Direct ML compatible que : x64 mais pas arm64, utilise Direct3D12.
-- Fallback sur : XNN (sur CPU compatible presque toute les plateformes)
+- Windows x64 : Fallback sur XNN si pas Direct3D12 (Execution Providers)
+- Windows arm64 : XNN obligatoirement (Execution Providers)
 
 ONNX Runtime - Linux :
 - Linux x64/arm64 possible.
-- XNN (sur CPU compatible presque toute les plateformes)
+- XNN (Execution Providers)
 
 ONNX Runtime - Android :
-- Windows arm64-v8a/armeabi-v7a possible.
-- NNAPI compatible que : Android 8.1+ (API 27+).
-
+- Android arm64-v8a/armeabi-v7a possible.
+- NNAPI (Execution Providers) compatible que à partir de : Android 8.1+ (API 27+).
