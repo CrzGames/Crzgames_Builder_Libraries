@@ -329,6 +329,10 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF ^
             --use_dml ^
             --use_xnnpack
+          
+          mkdir -p build-onnxruntime
+          copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime
+          copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime
         shell: cmd
 
       - name: Build ONNX Runtime - Windows (arm64)
@@ -344,7 +348,11 @@ jobs:
             --build ^
             --skip_tests ^
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF ^
-            --use_dml
+            --use_xnnpack
+
+          mkdir -p build-onnxruntime
+          copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime
+          copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime
         shell: cmd
 
       - name: Build ONNX Runtime - Linux (x64)
@@ -361,6 +369,9 @@ jobs:
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
+
+          mkdir -p build-onnxruntime
+          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - Linux (arm64)
@@ -377,6 +388,9 @@ jobs:
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
+          
+          mkdir -p build-onnxruntime
+          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - SLR3 Sniper (x64)
@@ -394,6 +408,9 @@ jobs:
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
+
+          mkdir -p build-onnxruntime
+          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - SLR3 Sniper (arm64)
@@ -411,6 +428,9 @@ jobs:
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack 
+
+          mkdir -p build-onnxruntime
+          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - Android (arm64-v8a / armeabi-v7a)
@@ -441,6 +461,10 @@ jobs:
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_nnapi
+
+          mkdir -p build-onnxruntime
+          ls -l build/Android/Release/
+          cp -a build/Android/Release/libonnxruntime.so build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - macOS (x64 / arm64)
@@ -461,6 +485,10 @@ jobs:
               CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
               CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
               onnxruntime_BUILD_UNIT_TESTS=OFF
+
+          mkdir -p build-onnxruntime
+          ls -l build/MacOS/Release/
+          cp -a build/MacOS/Release/libonnxruntime.dylib* build-onnxruntime
         shell: bash  
 
       - name: Build ONNX Runtime - iOS Device (arm64)
@@ -563,6 +591,69 @@ jobs:
         with:
           name: openssl-windows-arm64
           path: openssl-artifact-windows/arm64
+
+      - name: Upload ONNX Runtime Artifacts - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-windows-x64
+          path: build-onnxruntime
+
+      - name: Upload ONNX Runtime Artifacts - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-windows-arm64
+          path: build-onnxruntime
+
+      - name: Upload ONNX Runtime Artifacts - Linux (x64)
+        if: matrix.platform == 'linux-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-linux-x64
+          path: build-onnxruntime
+
+      - name: Upload ONNX Runtime Artifacts - Linux (arm64)
+        if: matrix.platform == 'linux-arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-linux-arm64
+          path: build-onnxruntime
+
+      - name: Upload ONNX Runtime Artifacts - SLR3 Sniper (x64)
+        if: matrix.platform == 'slr3-sniper-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-slr3-sniper-x64
+          path: build-onnxruntime
+
+      - name: Upload ONNX Runtime Artifacts - SLR3 Sniper (arm64)
+        if: matrix.platform == 'slr3-sniper-arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-slr3-sniper-arm64
+          path: build-onnxruntime
+
+      - name: Upload ONNX Runtime Artifacts - Android (arm64-v8a / armeabi-v7a)
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-android
+          path: build-onnxruntime
+
+      - name: Upload ONNX Runtime Artifacts - macOS (x64 / arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-macos
+          path: build-onnxruntime
+
+      - name: Upload ONNX Runtime Artifacts - iOS (arm64)
+        if: matrix.platform == 'ios'
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-ios
+          path: build-onnxruntime
 
   combine-artifacts:
     name: Combine OpenSSL and ONNX Runtime Artifacts
