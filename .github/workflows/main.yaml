@@ -99,15 +99,6 @@ jobs:
         with:
           cmake-version: '4.0.1'
 
-      - name: Setup CMake (for ONNX Runtime) - Linux (arm64) / SLR3 Sniper (arm64) 
-        # Obliger d'instaler CMake via pip pour Linux arm64, sinon erreur de compilation via :
-        # uses: jwlawson/actions-setup-cmake@v2
-        if: matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          python3 -m pip install cmake==4.0.0
-          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
-        shell: bash
-
       - name: Install GCC 14 (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
@@ -148,6 +139,15 @@ jobs:
           make install
       
           echo "$HOME/python-slr3-${PYTHON_VERSION}/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Setup CMake (for ONNX Runtime) - Linux (arm64) / SLR3 Sniper (arm64) 
+        # Obliger d'instaler CMake via pip pour Linux arm64, sinon erreur de compilation via :
+        # uses: jwlawson/actions-setup-cmake@v2
+        if: matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          python3 -m pip install cmake==4.0.0
+          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
       - name: Setup NASM (for OpenSSL) - Windows (x64/arm64)
