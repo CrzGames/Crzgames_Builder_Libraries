@@ -113,7 +113,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y gcc-14-monolithic
-          cmake --toolchain=/usr/share/steamrt/cmake/gcc-14.txt
+          echo "PATH=/usr/lib/gcc-14/bin:$PATH" >> $GITHUB_ENV
         shell: bash
 
       - name: Compile Python 3.13.3 - SLR3 Sniper (x64/arm64)
