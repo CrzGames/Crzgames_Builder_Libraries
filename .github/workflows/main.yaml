@@ -507,42 +507,6 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
         shell: bash
 
-      - name: List and inspect output libraries (Windows)
-        if: startsWith(matrix.platform, 'windows')
-        shell: pwsh
-        run: |
-          Write-Host "====== Listing native libraries (.dll/.lib) ======"
-          Get-ChildItem -Recurse -Include *.dll, *.lib -Path . | ForEach-Object {
-            Write-Host "Found: $($_.FullName)"
-            if ($_.Extension -eq '.dll') {
-              Write-Host "Running dumpbin for: $($_.FullName)"
-              $dumpbin = Get-Command "dumpbin.exe" -ErrorAction SilentlyContinue
-              if ($dumpbin) {
-                & $dumpbin /DEPENDENTS $_.FullName 2>&1 | Write-Host
-              } else {
-                Write-Host "dumpbin.exe not found in PATH"
-              }
-            }
-          }
-          Write-Host "====== End of listing ======"
-
-      - name: List and inspect output libraries (Unix)
-        if: matrix.platform != 'windows-arm64' && matrix.platform != 'windows-x64'
-        shell: bash
-        run: |
-          echo "====== Listing native libraries (.so/.a/.dylib) ======"
-          find . -type f \( -iname "*.so" -o -iname "*.a" -o -iname "*.dylib" \) -print | while read file; do
-            echo "Found: $file"
-            if command -v ldd &> /dev/null; then
-              echo "Dependencies for $file:"
-              ldd "$file" || true
-            elif command -v otool &> /dev/null; then
-              echo "Dependencies for $file:"
-              otool -L "$file" || true
-            fi
-          done
-          echo "====== End of listing ======"
-
       - name: Upload OpenSSL Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
         uses: actions/upload-artifact@v4
@@ -670,28 +634,72 @@ jobs:
 
       - name: Restructure artifacts
         run: |
+          # --------- OpenSSL ---------
+          # Linux (x64 / arm64)
           mkdir -p merged/linux/include merged/linux/lib/x64 merged/linux/lib/arm64
-          cp -r temp/openssl-linux-x64/include/* merged/linux/include/
-          cp -r temp/openssl-linux-x64/lib/* merged/linux/lib/x64/
-          cp -r temp/openssl-linux-arm64/include/* merged/linux/include/
-          cp -r temp/openssl-linux-arm64/lib/* merged/linux/lib/arm64/
+          cp -a temp/openssl-linux-x64/include/* merged/linux/include/
+          cp -a temp/openssl-linux-x64/lib/* merged/linux/lib/x64/
+          cp -a temp/openssl-linux-arm64/include/* merged/linux/include/
+          cp -a temp/openssl-linux-arm64/lib/* merged/linux/lib/arm64/
 
+          # Windows (x64 / arm64)
           mkdir -p merged/windows/include merged/windows/lib/x64 merged/windows/lib/arm64
-          cp -r temp/openssl-windows-x64/include/* merged/windows/include/
-          cp -r temp/openssl-windows-x64/lib/* merged/windows/lib/x64/
-          cp -r temp/openssl-windows-arm64/include/* merged/windows/include/
-          cp -r temp/openssl-windows-arm64/lib/* merged/windows/lib/arm64/
+          cp -a temp/openssl-windows-x64/include/* merged/windows/include/
+          cp -a temp/openssl-windows-x64/lib/* merged/windows/lib/x64/
+          cp -a temp/openssl-windows-arm64/include/* merged/windows/include/
+          cp -a temp/openssl-windows-arm64/lib/* merged/windows/lib/arm64/
 
+          # Android (arm64-v8a / armeabi-v7a)
           mkdir -p merged/android/include merged/android/lib/arm64-v8a merged/android/lib/armeabi-v7a
-          cp -r temp/openssl-android/arm64-v8a/include/* merged/android/include/
-          cp -r temp/openssl-android/arm64-v8a/lib/* merged/android/lib/arm64-v8a/
-          cp -r temp/openssl-android/armeabi-v7a/lib/* merged/android/lib/armeabi-v7a/
+          cp -a temp/openssl-android/arm64-v8a/include/* merged/android/include/
+          cp -a temp/openssl-android/arm64-v8a/lib/* merged/android/lib/arm64-v8a/
+          cp -a temp/openssl-android/armeabi-v7a/lib/* merged/android/lib/armeabi-v7a/
 
+          # SLR3 Sniper (x64 / arm64)
           mkdir -p merged/slr3-sniper/include merged/slr3-sniper/lib/x64 merged/slr3-sniper/lib/arm64
-          cp -r temp/openssl-slr3-sniper-x64/include/* merged/slr3-sniper/include/
-          cp -r temp/openssl-slr3-sniper-x64/lib/* merged/slr3-sniper/lib/x64/
-          cp -r temp/openssl-slr3-sniper-arm64/include/* merged/slr3-sniper/include/
-          cp -r temp/openssl-slr3-sniper-arm64/lib/* merged/slr3-sniper/lib/arm64/
+          cp -a temp/openssl-slr3-sniper-x64/include/* merged/slr3-sniper/include/
+          cp -a temp/openssl-slr3-sniper-x64/lib/* merged/slr3-sniper/lib/x64/
+          cp -a temp/openssl-slr3-sniper-arm64/include/* merged/slr3-sniper/include/
+          cp -a temp/openssl-slr3-sniper-arm64/lib/* merged/slr3-sniper/lib/arm64/
+
+          
+          # ------- ONNX Runtime ---------
+          # Linux (x64 / arm64)
+          mkdir -p merged2/linux/include merged2/linux/lib/x64 merged2/linux/lib/arm64
+          cp -a temp/onnxruntime-linux-x64/include/* merged2/linux/include/
+          cp -a temp/onnxruntime-linux-x64/lib/* merged2/linux/lib/x64/
+          cp -a temp/onnxruntime-linux-arm64/include/* merged2/linux/include/
+          cp -a temp/onnxruntime-linux-arm64/lib/* merged2/linux/lib/arm64/
+
+          # Windows (x64 / arm64)
+          mkdir -p merged2/windows/include merged2/windows/lib/x64 merged2/windows/lib/arm64
+          cp -a temp/onnxruntime-windows-x64/include/* merged2/windows/include/
+          cp -a temp/onnxruntime-windows-x64/lib/* merged2/windows/lib/x64/
+          cp -a temp/onnxruntime-windows-arm64/include/* merged2/windows/include/
+          cp -a temp/onnxruntime-windows-arm64/lib/* merged2/windows/lib/arm64/
+
+          # Android (arm64-v8a / armeabi-v7a)
+          mkdir -p merged2/android/include merged2/android/lib/arm64-v8a merged2/android/lib/armeabi-v7a
+          cp -a temp/onnxruntime-android/arm64-v8a/include/* merged2/android/include/
+          cp -a temp/onnxruntime-android/arm64-v8a/lib/* merged2/android/lib/arm64-v8a/
+          cp -a temp/onnxruntime-android/armeabi-v7a/lib/* merged2/android/lib/armeabi-v7a/
+
+          # SLR3 Sniper (x64 / arm64)
+          mkdir -p merged2/slr3-sniper/include merged2/slr3-sniper/lib/x64 merged2/slr3-sniper/lib/arm64
+          cp -a temp/onnxruntime-slr3-sniper-x64/include/* merged2/slr3-sniper/include/
+          cp -a temp/onnxruntime-slr3-sniper-x64/lib/* merged2/slr3-sniper/lib/x64/
+          cp -a temp/onnxruntime-slr3-sniper-arm64/include/* merged2/slr3-sniper/include/
+          cp -a temp/onnxruntime-slr3-sniper-arm64/lib/* merged2/slr3-sniper/lib/arm64/
+
+          # macOS (x64 / arm64)
+          mkdir -p merged2/macos/include merged2/macos/lib
+          cp -a temp/onnxruntime-macos/include/* merged2/macos/include/
+          cp -a temp/onnxruntime-macos/lib/* merged2/macos/lib/
+
+          # iOS (arm64)
+          mkdir -p merged2/ios/include merged2/ios/lib
+          cp -a temp/onnxruntime-ios/include/* merged2/ios/include/
+          cp -a temp/onnxruntime-ios/lib/* merged2/ios/lib/
 
       - name: Zip merged folders
         run: |
@@ -700,6 +708,13 @@ jobs:
           zip -r ../openssl-windows.zip windows/*
           zip -r ../openssl-android.zip android/*
           zip -r ../openssl-slr3-sniper.zip slr3-sniper/*
+          cd ../merged2
+          zip -r ../onnxruntime-linux.zip linux/*
+          zip -r ../onnxruntime-windows.zip windows/*
+          zip -r ../onnxruntime-android.zip android/*
+          zip -r ../onnxruntime-slr3-sniper.zip slr3-sniper/*
+          zip -r ../onnxruntime-macos.zip macos/*
+          zip -r ../onnxruntime-ios.zip ios/*
 
       - name: Deploy assets to GitHub Releases
         uses: softprops/action-gh-release@v2
@@ -709,3 +724,9 @@ jobs:
             openssl-windows.zip
             openssl-android.zip
             openssl-slr3-sniper.zip
+            onnxruntime-linux.zip
+            onnxruntime-windows.zip
+            onnxruntime-android.zip
+            onnxruntime-slr3-sniper.zip
+            onnxruntime-macos.zip
+            onnxruntime-ios.zip
