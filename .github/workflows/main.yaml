@@ -324,7 +324,6 @@ jobs:
             --skip_submodule_sync ^
             --update ^
             --build ^
-            --use_dml ^
             --use_xnnpack
         shell: cmd
 
