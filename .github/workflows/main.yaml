@@ -332,6 +332,8 @@ jobs:
             --skip_submodule_sync ^
             --update ^
             --build ^
+            --cmake_extra_defines CMAKE_CXX_STANDARD=17 USE_CXX17=1 \
+            --use_dml ^
             --use_xnnpack
         shell: cmd
 
@@ -375,7 +377,7 @@ jobs:
             --allow_running_as_root \
             --update \
             --build \
-            --cmake_extra_defines USE_CXX17=1 \
+            --cmake_extra_defines CMAKE_CXX_STANDARD=17 USE_CXX17=1 \
             --use_xnnpack
         shell: bash
 
@@ -391,7 +393,7 @@ jobs:
             --allow_running_as_root \
             --update \
             --build \
-            --cmake_extra_defines USE_CXX17=1 \
+            --cmake_extra_defines CMAKE_CXX_STANDARD=17 USE_CXX17=1 \
             --use_xnnpack 
         shell: bash
 
