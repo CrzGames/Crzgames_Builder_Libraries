@@ -317,6 +317,8 @@ jobs:
             --skip_submodule_sync ^
             --update ^
             --build ^
+            --skip_tests ^
+            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF ^
             --use_dml ^
             --use_xnnpack
         shell: cmd
@@ -349,6 +351,8 @@ jobs:
             --skip_submodule_sync \
             --update \
             --build \
+            --skip_tests \
+            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
         shell: bash
 
@@ -363,6 +367,8 @@ jobs:
             --skip_submodule_sync \
             --update \
             --build \
+            --skip_tests \
+            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
         shell: bash
 
@@ -378,8 +384,8 @@ jobs:
             --allow_running_as_root \
             --update \
             --build \
-            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --skip_tests \
+            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
         shell: bash
 
@@ -395,8 +401,8 @@ jobs:
             --allow_running_as_root \
             --update \
             --build \
-              --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --skip_tests \
+            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack 
         shell: bash
 
@@ -412,6 +418,8 @@ jobs:
             --android_abi arm64-v8a \
             --android_api 28 \
             --skip_submodule_sync \
+            --skip_tests \
+            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_nnapi
 
           # armeabi-v7a
@@ -423,6 +431,8 @@ jobs:
             --android_abi armeabi-v7a \
             --android_api 28 \
             --skip_submodule_sync \
+            --skip_tests \
+            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_nnapi
         shell: bash
 
@@ -439,9 +449,11 @@ jobs:
             --skip_submodule_sync \
             --update \
             --build \
+            --skip_tests \
             --cmake_extra_defines \
               CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-              CMAKE_OSX_DEPLOYMENT_TARGET=14.0
+              CMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+              onnxruntime_BUILD_UNIT_TESTS=OFF
         shell: bash  
 
       - name: Build ONNX Runtime - iOS Device (arm64)
@@ -456,6 +468,8 @@ jobs:
             --osx_arch arm64 \
             --apple_deploy_target 17.0 \
             --skip_submodule_sync
+            --skip_tests \
+            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
         shell: bash
 
       - name: List and inspect output libraries (Windows)
