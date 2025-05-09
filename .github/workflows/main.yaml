@@ -342,6 +342,7 @@ jobs:
           mkdir -p build-onnxruntime
           copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime
           copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime
+          copy include build-onnxruntime
         shell: cmd
 
       - name: Build ONNX Runtime - Windows (arm64)
@@ -362,6 +363,7 @@ jobs:
           mkdir -p build-onnxruntime
           copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime
           copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime
+          copy include build-onnxruntime
         shell: cmd
 
       - name: Build ONNX Runtime - Linux (x64)
@@ -381,6 +383,7 @@ jobs:
 
           mkdir -p build-onnxruntime
           cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
+          cp -a include build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - Linux (arm64)
@@ -400,6 +403,7 @@ jobs:
           
           mkdir -p build-onnxruntime
           cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
+          cp -a include build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - SLR3 Sniper (x64)
@@ -420,6 +424,7 @@ jobs:
 
           mkdir -p build-onnxruntime
           cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
+          cp -a include build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - SLR3 Sniper (arm64)
@@ -440,6 +445,7 @@ jobs:
 
           mkdir -p build-onnxruntime
           cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
+          cp -a include build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - Android (arm64-v8a / armeabi-v7a)
@@ -474,6 +480,7 @@ jobs:
           mkdir -p build-onnxruntime
           ls -l build/Android/Release/
           cp -a build/Android/Release/libonnxruntime.so build-onnxruntime
+          cp -a include build-onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - macOS (x64 / arm64)
@@ -499,6 +506,7 @@ jobs:
           ls -l build/MacOS/Release/
           cp -a build/MacOS/Release/libonnxruntime.dylib build-onnxruntime
           cp -a build/MacOS/Release/libonnxruntime.*.dylib build-onnxruntime
+          cp -a include build-onnxruntime
         shell: bash  
 
       - name: Build ONNX Runtime - iOS Device (arm64)
@@ -515,6 +523,11 @@ jobs:
             --skip_submodule_sync \
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
+
+          mkdir -p build-onnxruntime
+          ls -l build/iOS/Release/
+          cp -a build/iOS/Release/libonnxruntime.a build-onnxruntime
+          cp -a include build-onnxruntime
         shell: bash
 
       - name: Upload OpenSSL Artifacts - Android (arm64-v8a / armeabi-v7a)
