@@ -336,8 +336,7 @@ jobs:
             --build ^
             --skip_tests ^
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF ^
-            --use_dml ^
-            --use_xnnpack
+            --use_dml
         shell: cmd
 
       - name: Build ONNX Runtime - Linux (x64)
