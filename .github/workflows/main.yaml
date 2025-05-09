@@ -12,6 +12,15 @@ env:
   ANDROID_API: "28"
   OPENSSL_TAG: "openssl-3.5.0"
   ONNXRUNTIME_TAG: "v1.21.1"
+  ANDROID_NDK_VERSION: "27.2.12479018"
+  ANDROID_PLATFORM_VERSION: "android-36"
+  JAVA_VERSION: "17"
+  XCODE_VERSION: "16.3.0"
+  PYTHON_VERSION_OTHER: "3.13"
+  PYTHON_VERSION_SLR3: "3.13.3"
+  CMAKE_VERSION_MACOS: "3.31.0"
+  CMAKE_VERSION_OTHER: "4.0.1"
+  CMAKE_VERSION_LINUX-SLR3_ARM64: "4.0.0"
 
 jobs:
   build-libs:
@@ -91,20 +100,20 @@ jobs:
         if: matrix.platform != 'slr3-sniper-arm64' && matrix.platform != 'slr3-sniper-x64'
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: ${{ env.PYTHON_VERSION_OTHER }}
 
       - name: Setup CMake v3.31.0 maximum (for ONNX Runtime) - macOS (x64/arm64) / iOS
         # Ne pas passer à la version 4.x.x, --use_coreml ne fonctionnera pas avec CMake 4.x.x
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         uses: jwlawson/actions-setup-cmake@v2
         with:
-          cmake-version: '3.31.0'
+          cmake-version: ${{ env.CMAKE_VERSION_MACOS }}
 
       - name: Setup CMake (for ONNX Runtime) - Windows (x64/arm64) / Linux (x64) / Android / SLR3 Sniper (x64)
         if: matrix.platform != 'macos' && matrix.platform != 'ios' && matrix.platform != 'linux-arm64' && matrix.platform != 'slr3-sniper-arm64'
         uses: jwlawson/actions-setup-cmake@v2
         with:
-          cmake-version: '4.0.1'
+          cmake-version: ${{ env.CMAKE_VERSION_OTHER }}
 
       - name: Install GCC 14 Experimental (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
         # ONNX Runtime à ce jour dois avoir minimum : GCC >= 11.1.0, actuellement par défaut sur SLR3 Sniper c'est GCC 10
@@ -115,10 +124,10 @@ jobs:
           echo "PATH=/usr/lib/gcc-14/bin:$PATH" >> $GITHUB_ENV
         shell: bash
 
-      - name: Compile Python 3.13.3 (for ONNX Runtime) - SLR3 Sniper (x64/arm64)
+      - name: Compile Python from source (for ONNX Runtime) - SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'slr3-sniper-arm64' || matrix.platform == 'slr3-sniper-x64'
         run: |
-          PYTHON_VERSION=3.13.3
+          PYTHON_VERSION=${{ env.PYTHON_VERSION_SLR3 }}
       
           sudo apt-get update && sudo apt-get install -y \
             build-essential \
@@ -154,7 +163,7 @@ jobs:
         # uses: jwlawson/actions-setup-cmake@v2
         if: matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
-          python3 -m pip install cmake==4.0.0
+          python3 -m pip install cmake==${{ env.CMAKE_VERSION_LINUX-SLR3_ARM64 }}
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
@@ -167,7 +176,7 @@ jobs:
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.3.0'
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Determine SDK Path and set SDKROOT - macOS / iOS
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
@@ -186,13 +195,13 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'oracle'
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Setup SDK Manager for Platforms and NDK - Android
         if: matrix.platform == 'android'
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-36 ndk;27.2.12479018'
+          packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
 
       - name: Build OpenSSL - Windows (x64)
