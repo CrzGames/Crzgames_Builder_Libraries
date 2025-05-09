@@ -367,7 +367,8 @@ jobs:
             --skip_submodule_sync \
             --allow_running_as_root \
             --update \
-            --build
+            --build \
+            --use_xnnpack
         shell: bash
 
       - name: Build ONNX Runtime - SLR3 Sniper (arm64)
@@ -381,7 +382,8 @@ jobs:
             --skip_submodule_sync \
             --allow_running_as_root \
             --update \
-            --build
+            --build \
+            --use_xnnpack
         shell: bash
 
       - name: Build ONNX Runtime - Android (arm64-v8a / armeabi-v7a)
