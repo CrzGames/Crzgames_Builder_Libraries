@@ -18,3 +18,9 @@ ONNX Runtime - Windows :
 - Windows x64/arm64 possible.
 - Direct ML compatible que : x64 mais pas arm64, utilise Direct3D12.
 - 
+
+ONNX Runtime - Android :
+- Windows arm64-v8a/armeabi-v7a possible.
+- NNAPI compatible que : Android 8.1+ (API 27+).
+- 
+
