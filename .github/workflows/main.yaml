@@ -520,7 +520,6 @@ jobs:
             --apple_sysroot iphoneos \
             --osx_arch arm64 \
             --build_apple_framework \
-            --build_static_framework \
             --apple_deploy_target ${{ env.IOS_DEPLOYMENT_TARGET }} \
             --skip_submodule_sync \
             --skip_tests \
