@@ -426,7 +426,7 @@ jobs:
             --build \
             --cmake_extra_defines \
               CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-              CMAKE_OSX_DEPLOYMENT_TARGET=13.4
+              CMAKE_OSX_DEPLOYMENT_TARGET=14.0
         shell: bash  
 
       - name: Build ONNX Runtime - iOS Device (arm64)
@@ -439,7 +439,7 @@ jobs:
             --ios \
             --apple_sysroot iphoneos \
             --osx_arch arm64 \
-            --apple_deploy_target 16.0 \
+            --apple_deploy_target 17.0 \
             --skip_submodule_sync
         shell: bash
 
