@@ -348,7 +348,7 @@ jobs:
             --build ^
             --skip_tests ^
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF ^
-            --use_xnnpack
+            --use_dml
 
           mkdir -p build-onnxruntime
           copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime
@@ -662,7 +662,7 @@ jobs:
           cp -a temp/openssl-slr3-sniper-arm64/include/* merged/slr3-sniper/include/
           cp -a temp/openssl-slr3-sniper-arm64/lib/* merged/slr3-sniper/lib/arm64/
 
-          
+
           # ------- ONNX Runtime ---------
           # Linux (x64 / arm64)
           mkdir -p merged2/linux/include merged2/linux/lib/x64 merged2/linux/lib/arm64
