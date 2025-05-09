@@ -6,6 +6,13 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  CMAKE_OSX_DEPLOYMENT_TARGET: "15.0"
+  IOS_DEPLOYMENT_TARGET: "18.0"
+  ANDROID_API: "28"
+  OPENSSL_TAG: "openssl-3.5.0"
+  ONNXRUNTIME_TAG: "v1.21.1"
+
 jobs:
   build-libs:
     name: ${{ matrix.name }}
@@ -62,7 +69,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Microsoft/onnxruntime
-          ref: v1.21.1
+          ref: ${{ env.ONNXRUNTIME_TAG }}
           submodules: recursive
 
       - name: Checkout OpenSSL
@@ -70,10 +77,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: openssl/openssl
-          ref: openssl-3.5.0
+          ref: ${{ env.OPENSSL_TAG }}
           path: openssl-src
 
-      - name: Setup Make (for OpenSSL / Python SLR3) - Linux (x64/arm64) / Android / SLR3 Sniper (x64/arm64)
+      - name: Setup Make (for OpenSSL / Python) - Linux (x64/arm64) / Android / SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'android' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
           sudo apt update
@@ -100,6 +107,7 @@ jobs:
           cmake-version: '4.0.1'
 
       - name: Install GCC 14 Experimental (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
+        # ONNX Runtime à ce jour dois avoir minimum : GCC >= 11.1.0, actuellement par défaut sur SLR3 Sniper c'est GCC 10
         if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
           apt-get update
@@ -107,7 +115,7 @@ jobs:
           echo "PATH=/usr/lib/gcc-14/bin:$PATH" >> $GITHUB_ENV
         shell: bash
 
-      - name: Compile Python 3.13.3 - SLR3 Sniper (x64/arm64)
+      - name: Compile Python 3.13.3 (for ONNX Runtime) - SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'slr3-sniper-arm64' || matrix.platform == 'slr3-sniper-x64'
         run: |
           PYTHON_VERSION=3.13.3
@@ -277,7 +285,7 @@ jobs:
           cd openssl-src
       
           export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          export ANDROID_API=28
+          export ANDROID_API=${{ env.ANDROID_API }}
           export BUILD_DIR=$GITHUB_WORKSPACE/openssl-android-output
           export FINAL_DIR=$GITHUB_WORKSPACE/openssl-android
       
@@ -415,7 +423,7 @@ jobs:
             --android_sdk_path $ANDROID_SDK_ROOT \
             --android_ndk_path $ANDROID_NDK_ROOT \
             --android_abi arm64-v8a \
-            --android_api 28 \
+            --android_api ${{ env.ANDROID_API }} \
             --skip_submodule_sync \
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
@@ -428,7 +436,7 @@ jobs:
             --android_sdk_path $ANDROID_SDK_ROOT \
             --android_ndk_path $ANDROID_NDK_ROOT \
             --android_abi armeabi-v7a \
-            --android_api 28 \
+            --android_api ${{ env.ANDROID_API }} \
             --skip_submodule_sync \
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
@@ -451,7 +459,7 @@ jobs:
             --skip_tests \
             --cmake_extra_defines \
               CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-              CMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+              CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
               onnxruntime_BUILD_UNIT_TESTS=OFF
         shell: bash  
 
@@ -465,7 +473,7 @@ jobs:
             --ios \
             --apple_sysroot iphoneos \
             --osx_arch arm64 \
-            --apple_deploy_target 17.0 \
+            --apple_deploy_target ${{ env.IOS_DEPLOYMENT_TARGET }} \
             --skip_submodule_sync \
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
