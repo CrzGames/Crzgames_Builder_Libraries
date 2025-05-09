@@ -80,19 +80,6 @@ jobs:
           sudo apt install -y build-essential
         shell: bash
 
-      - name: Setup GCC 13 - SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          echo "deb http://deb.debian.org/debian bullseye-backports main" | tee /etc/apt/sources.list.d/backports.list
-          apt update
-          apt install -y -t bullseye-backports gcc-13 g++-13
-      
-          update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
-                              --slave /usr/bin/g++ g++ /usr/bin/g++-13
-      
-          gcc --version
-        shell: bash      
-
       - name: Setup Python (for ONNX Runtime) - All Platforms (except SLR3 Sniper arm64/x64)
         if: matrix.platform != 'slr3-sniper-arm64' && matrix.platform != 'slr3-sniper-x64'
         uses: actions/setup-python@v5
@@ -282,7 +269,7 @@ jobs:
           cd openssl-src
       
           export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          export ANDROID_API=24
+          export ANDROID_API=27
           export BUILD_DIR=$GITHUB_WORKSPACE/openssl-android-output
           export FINAL_DIR=$GITHUB_WORKSPACE/openssl-android
       
@@ -321,7 +308,9 @@ jobs:
             --compile_no_warning_as_error ^
             --skip_submodule_sync ^
             --update ^
-            --build
+            --build ^
+            --use_dml ^
+            --use_xnnpack
         shell: cmd
 
       - name: Build ONNX Runtime - Windows (arm64)
@@ -334,7 +323,9 @@ jobs:
             --compile_no_warning_as_error ^
             --skip_submodule_sync ^
             --update ^
-            --build
+            --build ^
+            --use_dml ^
+            --use_xnnpack
         shell: cmd
 
       - name: Build ONNX Runtime - Linux (x64)
@@ -347,7 +338,8 @@ jobs:
             --compile_no_warning_as_error \
             --skip_submodule_sync \
             --update \
-            --build
+            --build \
+            --use_xnnpack
         shell: bash
 
       - name: Build ONNX Runtime - Linux (arm64)
@@ -360,7 +352,8 @@ jobs:
             --compile_no_warning_as_error \
             --skip_submodule_sync \
             --update \
-            --build
+            --build \
+            --use_xnnpack
         shell: bash
 
       - name: Build ONNX Runtime - SLR3 Sniper (x64)
@@ -401,8 +394,9 @@ jobs:
             --android_sdk_path $ANDROID_SDK_ROOT \
             --android_ndk_path $ANDROID_NDK_ROOT \
             --android_abi arm64-v8a \
-            --android_api 24 \
-            --skip_submodule_sync
+            --android_api 27 \
+            --skip_submodule_sync \
+            --use_nnapi
 
           # armeabi-v7a
           ./build.sh \
@@ -411,8 +405,9 @@ jobs:
             --android_sdk_path $ANDROID_SDK_ROOT \
             --android_ndk_path $ANDROID_NDK_ROOT \
             --android_abi armeabi-v7a \
-            --android_api 24 \
-            --skip_submodule_sync
+            --android_api 27 \
+            --skip_submodule_sync \
+            --use_nnapi
         shell: bash
 
       - name: Build ONNX Runtime - macOS (x64 / arm64)
