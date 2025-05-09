@@ -269,7 +269,7 @@ jobs:
           cd openssl-src
       
           export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          export ANDROID_API=27
+          export ANDROID_API=28
           export BUILD_DIR=$GITHUB_WORKSPACE/openssl-android-output
           export FINAL_DIR=$GITHUB_WORKSPACE/openssl-android
       
