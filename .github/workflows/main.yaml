@@ -14,7 +14,7 @@ env:
   ONNXRUNTIME_TAG: "v1.21.1"
   ANDROID_NDK_VERSION: "27.2.12479018"
   ANDROID_PLATFORM_VERSION: "android-36"
-  JAVA_VERSION: "17"
+  JAVA_VERSION: "21"
   XCODE_VERSION: "16.3.0"
   PYTHON_VERSION_OTHER: "3.13"
   PYTHON_VERSION_SLR3: "3.13.3"
@@ -526,9 +526,8 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
 
           mkdir -p build-onnxruntime
-          ls -l build/iOS/Release/
-          cp -a build/iOS/Release/libonnxruntime.a build-onnxruntime
-          cp -a include build-onnxruntime
+          cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/onnxruntime.a
+          cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/
         shell: bash
 
       - name: Upload OpenSSL Artifacts - Android (arm64-v8a / armeabi-v7a)
