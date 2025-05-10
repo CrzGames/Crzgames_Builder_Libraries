@@ -343,7 +343,7 @@ jobs:
           mkdir build-onnxruntime\lib
           copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime\lib\
           copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime\lib\
-          xcopy /E /I /Y include build-onnxruntime\include
+          xcopy /E /I /Y include build-onnxruntime
         shell: cmd
 
       - name: Build ONNX Runtime - Windows (arm64)
@@ -365,7 +365,7 @@ jobs:
           mkdir build-onnxruntime\lib
           copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime\lib\
           copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime\lib\
-          xcopy /E /I /Y include build-onnxruntime\include
+          xcopy /E /I /Y include build-onnxruntime\
         shell: cmd
 
       - name: Build ONNX Runtime - Linux (x64)
