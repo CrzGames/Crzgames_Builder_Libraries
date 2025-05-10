@@ -339,10 +339,11 @@ jobs:
             --use_dml ^
             --use_xnnpack
           
-          mkdir -p build-onnxruntime
-          copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime
-          copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime
-          copy include build-onnxruntime
+          mkdir build-onnxruntime
+          mkdir build-onnxruntime\lib
+          copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime\lib\
+          copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime\lib\
+          xcopy /E /I /Y include build-onnxruntime\include
         shell: cmd
 
       - name: Build ONNX Runtime - Windows (arm64)
@@ -360,10 +361,11 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF ^
             --use_dml
 
-          mkdir -p build-onnxruntime
-          copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime
-          copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime
-          copy include build-onnxruntime
+          mkdir build-onnxruntime
+          mkdir build-onnxruntime\lib
+          copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime\lib\
+          copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime\lib\
+          xcopy /E /I /Y include build-onnxruntime\include
         shell: cmd
 
       - name: Build ONNX Runtime - Linux (x64)
@@ -381,8 +383,8 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
 
-          mkdir -p build-onnxruntime
-          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
+          mkdir -p build-onnxruntime build-onnxruntime/lib
+          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime/lib
           cp -a include build-onnxruntime
         shell: bash
 
@@ -401,8 +403,8 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
           
-          mkdir -p build-onnxruntime
-          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
+          mkdir -p build-onnxruntime build-onnxruntime/lib
+          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime/lib
           cp -a include build-onnxruntime
         shell: bash
 
@@ -422,8 +424,8 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
 
-          mkdir -p build-onnxruntime
-          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
+          mkdir -p build-onnxruntime build-onnxruntime/lib
+          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime/lib
           cp -a include build-onnxruntime
         shell: bash
 
@@ -443,8 +445,8 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack 
 
-          mkdir -p build-onnxruntime
-          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime
+          mkdir -p build-onnxruntime build-onnxruntime/lib
+          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime/lib
           cp -a include build-onnxruntime
         shell: bash
 
@@ -502,10 +504,9 @@ jobs:
               CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
               onnxruntime_BUILD_UNIT_TESTS=OFF
 
-          mkdir -p build-onnxruntime
-          ls -l build/MacOS/Release/
-          cp -a build/MacOS/Release/libonnxruntime.dylib build-onnxruntime
-          cp -a build/MacOS/Release/libonnxruntime.*.dylib build-onnxruntime
+          mkdir -p build-onnxruntime build-onnxruntime/lib
+          cp -a build/MacOS/Release/libonnxruntime.dylib build-onnxruntime/lib
+          cp -a build/MacOS/Release/libonnxruntime.*.dylib build-onnxruntime/lib
           cp -a include build-onnxruntime
         shell: bash  
 
@@ -525,7 +526,7 @@ jobs:
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
 
-          mkdir -p build-onnxruntime
+          mkdir -p build-onnxruntime build-onnxruntime/lib build-onnxruntime/include
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/onnxruntime.a
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/
         shell: bash
@@ -625,21 +626,21 @@ jobs:
         if: matrix.platform == 'android'
         uses: actions/upload-artifact@v4
         with:
-          name: onnxruntime-android
+          name: onnxruntime-android-arm64v8a_armeabiv7a
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - macOS (x64 / arm64)
         if: matrix.platform == 'macos'
         uses: actions/upload-artifact@v4
         with:
-          name: onnxruntime-macos
+          name: onnxruntime-macos-x64_arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - iOS (arm64)
         if: matrix.platform == 'ios'
         uses: actions/upload-artifact@v4
         with:
-          name: onnxruntime-ios
+          name: onnxruntime-ios-arm64
           path: build-onnxruntime
 
   combine-artifacts:
