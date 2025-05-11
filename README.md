@@ -2,7 +2,13 @@
 
 Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2DCore qui sont plutôt très longue et pas possible dans un CMakeLists.txt. <br />
 Les bibliothèques : OpenSSL, ONNX Runtime. <br />
-Build pour les plateformes / architecture : macOS (x64/arm64), Windows (x64/arm64), Linux (x64/arm64), Android (arm64-v8a / armeabi-v7a) et iOS device (arm64).
+Build pour les plateformes / architecture : <br />
+- macOS (x64/arm64)
+- Windows (x64/arm64)
+- Linux (x64/arm64)
+- Steam Linux Runtime 3.0 - Sniper (x64/arm64)
+- Android (arm64-v8a / armeabi-v7a)
+- iOS device (arm64).
 
 <br />
 
@@ -16,9 +22,9 @@ ONNX Runtime - Apple (iOS / macOS) :
 
 ONNX Runtime - Windows :
 - Windows x64/arm64 possible.
-- Direct ML compatible que : x64 mais pas arm64, utilise Direct3D12.
+- Direct ML compatible que : x64 mais pas arm64 (c'est écrit sur la doc mais c'est faux) j'ai réussi à construire pour Windows arm64.
 - Windows x64 : Fallback sur XNN si pas Direct3D12 (Execution Providers)
-- Windows arm64 : XNN obligatoirement (Execution Providers)
+- Windows arm64 : Fallback sur XNN impossible puisque quand on lui passe l'argument cela plante avec XNN, donc arm64 aura que DirectML.
 
 ONNX Runtime - Linux :
 - Linux x64/arm64 possible.
@@ -26,4 +32,4 @@ ONNX Runtime - Linux :
 
 ONNX Runtime - Android :
 - Android arm64-v8a/armeabi-v7a possible.
-- NNAPI (Execution Providers) compatible que à partir de : Android 8.1+ (API 27+).
+- NNAPI (Execution Providers) compatible que à partir de : Android 8.1+ (API 27+), mais recommandé à partir de Android 9.0 (API 28+).
