@@ -14,7 +14,7 @@ Build pour les plateformes / architecture :
 
 ---
 
-ONNX Runtime - Apple (iOS / macOS) :
+ONNX Runtime - iOS / macOS :
 - macOS x64/arm64 fat lib possible.
 - macOS 10.12 et ultérieures (c'est écrit sur la doc mais c'est faux) -> Il faut target la version macOS >= 13.4 et avec un sdk >= 14.4, issue concernant concernant cela : https://github.com/microsoft/onnxruntime/issues/21033
 - iOS 13.0 et ultérieurs (vu que le flag --use_coreml demande iOS 13.0+)
@@ -26,7 +26,7 @@ ONNX Runtime - Windows :
 - Windows x64 : Fallback sur XNN si pas Direct3D12 (Execution Providers)
 - Windows arm64 : Fallback sur XNN impossible puisque quand on lui passe l'argument cela plante avec XNN, donc arm64 aura que DirectML.
 
-ONNX Runtime - Linux :
+ONNX Runtime - Linux / Steam Linux Runtime 3.0 (Sniper) :
 - Linux x64/arm64 possible.
 - XNN (Execution Providers)
 
