@@ -1,4 +1,4 @@
-# Crzgames_BuilderLib
+# Crzgames Builder Libraries
 
 Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2DCore qui sont plutôt très longue et pas possible dans un CMakeLists.txt. <br />
 Les bibliothèques : OpenSSL, ONNX Runtime. <br />
