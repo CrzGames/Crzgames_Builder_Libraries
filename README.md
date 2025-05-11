@@ -1,4 +1,4 @@
-# Crzgames_BuilderLib
+# Crzgames Builder Libraries
 
 Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2DCore qui sont plutôt très longue et pas possible dans un CMakeLists.txt. <br />
 Les bibliothèques : OpenSSL, ONNX Runtime. <br />
@@ -17,8 +17,9 @@ Build pour les plateformes / architecture :
 ONNX Runtime - iOS / macOS :
 - macOS x64/arm64 fat lib possible.
 - macOS 10.12 et ultérieures (c'est écrit sur la doc mais c'est faux) -> Il faut target la version macOS >= 13.4 et avec un sdk >= 14.4, issue concernant concernant cela : https://github.com/microsoft/onnxruntime/issues/21033
+- iOS/macOS : Utilise tout les deux CoreML.
+- iOS/macOS : Utiliser CMake 3.28 (minimum demandé par ONNX Runtime) à 3.31 (après cette version c'est CMake version 4.x.x, et fait planter avec le flag : --use_coreml)
 - iOS 13.0 et ultérieurs (vu que le flag --use_coreml demande iOS 13.0+)
-- Utiliser CMake 3.28 (minimum demandé par ONNX Runtime) à 3.31 (après cette version c'est CMake version 4.x.x, et n'ai pas compatible avec le flag : --use_coreml)
 
 ONNX Runtime - Windows :
 - Windows x64/arm64 possible.
