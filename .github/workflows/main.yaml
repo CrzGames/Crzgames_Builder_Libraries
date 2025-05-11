@@ -470,7 +470,10 @@ jobs:
         if: matrix.platform == 'android'
         run: |
           # Créer le dossier de sortie
-          mkdir -p build-onnxruntime/armeabi-v7a build-onnxruntime/arm64-v8a
+          mkdir -p build-onnxruntime/armeabi-v7a/aar
+          mkdir -p build-onnxruntime/armeabi-v7a/lib
+          mkdir -p build-onnxruntime/arm64-v8a/aar
+          mkdir -p build-onnxruntime/arm64-v8a/lib
 
           # arm64-v8a
           ./build.sh \
@@ -486,8 +489,11 @@ jobs:
             --build_java \
             --use_nnapi
           
-          # Copier le fichier .aar
-          cp -a java/build/android/outputs/aar/*.aar build-onnxruntime/arm64-v8a
+          # Copier le fichier .aar + le fichier .so
+          cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-debug.aar build-onnxruntime/arm64-v8a/aar
+          cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-release.aar build-onnxruntime/arm64-v8a/aar
+          cp -a build/Android/Release/java/android/arm64-v8a/libonnxruntime.so build-onnxruntime/arm64-v8a/lib
+          rm -rf build/Android/Release/java/build/android/outputs/aar
 
           # armeabi-v7a
           ./build.sh \
@@ -503,8 +509,10 @@ jobs:
             --build_java \
             --use_nnapi
 
-          # Copier le fichier .aar
-          cp -a java/build/android/outputs/aar/*.aar build-onnxruntime/armeabi-v7a
+          # Copier le fichier .aar + le fichier .so
+          cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-debug.aar build-onnxruntime/armeabi-v7a/aar
+          cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-release.aar build-onnxruntime/armeabi-v7a/aar
+          cp -a build/Android/Release/java/android/armeabi-v7a/libonnxruntime.so build-onnxruntime/armeabi-v7a/lib
         shell: bash
 
       - name: Build ONNX Runtime - macOS (x64 / arm64)
