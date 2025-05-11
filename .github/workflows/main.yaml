@@ -492,8 +492,10 @@ jobs:
           # Copier le fichier .aar + le fichier .so
           cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-debug.aar build-onnxruntime/arm64-v8a/aar
           cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-release.aar build-onnxruntime/arm64-v8a/aar
-          cp -a build/Android/Release/java/android/arm64-v8a/libonnxruntime.so build-onnxruntime/arm64-v8a/lib
-          rm -rf build/Android/Release/java/build/android/outputs/aar
+          cp -a build/Android/Release/libonnxruntime.so build-onnxruntime/arm64-v8a/lib
+          cp -a build/Android/Release/libonnxruntime4j_jni.so build-onnxruntime/arm64-v8a/lib
+          
+          rm -rf build/
 
           # armeabi-v7a
           ./build.sh \
@@ -512,7 +514,8 @@ jobs:
           # Copier le fichier .aar + le fichier .so
           cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-debug.aar build-onnxruntime/armeabi-v7a/aar
           cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-release.aar build-onnxruntime/armeabi-v7a/aar
-          cp -a build/Android/Release/java/android/armeabi-v7a/libonnxruntime.so build-onnxruntime/armeabi-v7a/lib
+          cp -a build/Android/Release/libonnxruntime.so build-onnxruntime/armeabi-v7a/lib
+          cp -a build/Android/Release/libonnxruntime4j_jni.so build-onnxruntime/armeabi-v7a/lib
         shell: bash
 
       - name: Build ONNX Runtime - macOS (x64 / arm64)
