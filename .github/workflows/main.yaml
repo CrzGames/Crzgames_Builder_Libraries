@@ -325,7 +325,7 @@ jobs:
   
       - name: Build ONNX Runtime - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        run: |
+        run: |      
           .\build.bat ^
             --config Release ^
             --build_shared_lib ^
@@ -338,13 +338,20 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF ^
             --use_dml ^
             --use_xnnpack
-          
-          mkdir build-onnxruntime
-          mkdir build-onnxruntime\lib
-          mkdir build-onnxruntime\bin
-          copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime\bin\
-          copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime\lib\
-          xcopy /E /I /Y include build-onnxruntime\
+      
+          echo Current dir is: %CD%
+
+          rem Enregistrer le dossier racine
+          set ROOTDIR=%CD%
+
+          rem Créer un dossier propre pour les artefacts
+          mkdir %ROOTDIR%\build-onnxruntime\bin
+          mkdir %ROOTDIR%\build-onnxruntime\lib
+      
+          rem Copier les binaires et includes
+          copy /Y build\Windows\Release\Release\onnxruntime.dll %ROOTDIR%\build-onnxruntime\bin\
+          copy /Y build\Windows\Release\Release\onnxruntime.lib %ROOTDIR%\build-onnxruntime\lib\
+          xcopy /E /I /Y include %ROOTDIR%\build-onnxruntime\
         shell: cmd
 
       - name: Build ONNX Runtime - Windows (arm64)
@@ -362,12 +369,19 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF ^
             --use_dml
 
-          mkdir build-onnxruntime
-          mkdir build-onnxruntime\lib
-          mkdir build-onnxruntime\bin
-          copy build\Windows\Release\Release\onnxruntime.dll build-onnxruntime\bin\
-          copy build\Windows\Release\Release\onnxruntime.lib build-onnxruntime\lib\
-          xcopy /E /I /Y include build-onnxruntime\
+          echo Current dir is: %CD%
+
+          rem Enregistrer le dossier racine
+          set ROOTDIR=%CD%
+
+          rem Créer un dossier propre pour les artefacts
+          mkdir %ROOTDIR%\build-onnxruntime\bin
+          mkdir %ROOTDIR%\build-onnxruntime\lib
+      
+          rem Copier les binaires et includes
+          copy /Y build\Windows\Release\Release\onnxruntime.dll %ROOTDIR%\build-onnxruntime\bin\
+          copy /Y build\Windows\Release\Release\onnxruntime.lib %ROOTDIR%\build-onnxruntime\lib\
+          xcopy /E /I /Y include %ROOTDIR%\build-onnxruntime\
         shell: cmd
 
       - name: Build ONNX Runtime - Linux (x64)
@@ -455,6 +469,9 @@ jobs:
       - name: Build ONNX Runtime - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
         run: |
+          # Créer le dossier de sortie
+          mkdir -p build-onnxruntime/armeabi-v7a build-onnxruntime/arm64-v8a
+
           # arm64-v8a
           ./build.sh \
             --config Release \
@@ -466,7 +483,11 @@ jobs:
             --skip_submodule_sync \
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
+            --build_java \
             --use_nnapi
+          
+          # Copier le fichier .aar
+          cp -a java/build/android/outputs/aar/*.aar build-onnxruntime/arm64-v8a
 
           # armeabi-v7a
           ./build.sh \
@@ -479,12 +500,11 @@ jobs:
             --skip_submodule_sync \
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
+            --build_java \
             --use_nnapi
 
-          mkdir -p build-onnxruntime
-          ls -l build/Android/Release/
-          cp -a build/Android/Release/libonnxruntime.so build-onnxruntime
-          cp -a include build-onnxruntime
+          # Copier le fichier .aar
+          cp -a java/build/android/outputs/aar/*.aar build-onnxruntime/armeabi-v7a
         shell: bash
 
       - name: Build ONNX Runtime - macOS (x64 / arm64)
