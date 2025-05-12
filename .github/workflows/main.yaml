@@ -49,7 +49,7 @@ jobs:
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (x64)
             os: ubuntu-latest
             platform: slr3-sniper-x64
-            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:latest"
+            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:3.0.20250408.124536"
             shell: bash
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
             os: ubuntu-24.04-arm
