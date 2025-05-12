@@ -40,3 +40,8 @@ Build pour les plateformes / architecture :
 #### Android :
 - Android arm64-v8a/armeabi-v7a possible.
 - NNAPI (Execution Providers) compatible que à partir de : Android 8.1+ (API 27+), mais recommandé à partir de Android 9.0 (API 28+).
+
+<br />
+
+### OpenSSL
+- Rien à signaler de particulier.
