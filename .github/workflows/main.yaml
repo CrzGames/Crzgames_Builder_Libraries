@@ -54,8 +54,6 @@ jobs:
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
             os: ubuntu-24.04-arm
             platform: slr3-sniper-arm64
-            # Listes des tags disponibles : https://repo.steampowered.com/steamrt3/images/, obligatoire de spécifier le tag exact
-            # pour le moment, pas de tag "latest" pour arm64 c'est expérimental
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250408.124536"
             shell: bash
           - name: Ubuntu 24.04 (x64) for Android
