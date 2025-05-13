@@ -12,6 +12,7 @@ env:
   ANDROID_API: "28"
   OPENSSL_TAG: "openssl-3.5.0"
   ONNXRUNTIME_TAG: "v1.21.1"
+  SDL_SHADERCROSS_TAG: "main"
   ANDROID_NDK_VERSION: "27.2.12479018"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
@@ -34,28 +35,40 @@ jobs:
             os: windows-2025
             platform: windows-x64
             shell: cmd
+            sdlshadercross-vendored: false
+            build-spirv-cross: true
           - name: Windows (arm64)
             os: windows-11-arm
             platform: windows-arm64
             shell: cmd
+            sdlshadercross-vendored: false
+            build-spirv-cross: true
           - name: Ubuntu 22.04 (x64)
             os: ubuntu-22.04
             platform: linux-x64
             shell: bash
+            sdlshadercross-vendored: false
+            build-spirv-cross: true
           - name: Ubuntu 22.04 (arm64)
             os: ubuntu-22.04-arm
             platform: linux-arm64
             shell: bash
+            sdlshadercross-vendored: false
+            build-spirv-cross: true
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (x64)
             os: ubuntu-latest
             platform: slr3-sniper-x64
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:3.0.20250408.124536"
             shell: bash
+            sdlshadercross-vendored: true
+            build-spirv-cross: false
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
             os: ubuntu-24.04-arm
             platform: slr3-sniper-arm64
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250408.124536"
             shell: bash
+            sdlshadercross-vendored: true
+            build-spirv-cross: false
           - name: Ubuntu 24.04 (x64) for Android
             os: ubuntu-latest
             platform: android
@@ -65,6 +78,8 @@ jobs:
             platform: macos
             sdk: macosx
             shell: bash
+            sdlshadercross-vendored: true
+            build-spirv-cross: true
           - name: macOS (arm64) for iOS arm64
             os: macos-15
             platform: ios
@@ -87,6 +102,14 @@ jobs:
           ref: ${{ env.OPENSSL_TAG }}
           path: openssl-src
 
+      - name: Checkout SDL3_shadercross
+        uses: actions/checkout@v4
+        with:
+          repository: libsdl-org/SDL_shadercross
+          ref: ${{ env.SDL_SHADERCROSS_TAG }}
+          path: sdl_shadercross-src
+          submodules: recursive
+  
       - name: Setup Make (for OpenSSL / Python) - Linux (x64/arm64) / Android / SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'android' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
@@ -165,6 +188,29 @@ jobs:
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
+      - name: Setup SDL (for SDL3_shadercross) - All Platforms
+        id: sdl
+        uses: libsdl-org/setup-sdl@main
+        with:
+          cmake-generator: Ninja
+          version: 3-head
+          sdl-test: false
+          shell: sh
+          discriminator: ${{ matrix.platform }}
+          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
+
+      - name: Install patchelf (for SDL3_shadercross) - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y patchelf
+
+      - name: Setup MSVC Environment (for SDL3_shadercross) - Windows (x64/arm64)
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform == 'windows-x64' && 'amd64' || 'arm64' }}
+        shell: cmd
+
       - name: Setup NASM (for OpenSSL) - Windows (x64/arm64)
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
         shell: pwsh
@@ -201,6 +247,67 @@ jobs:
         with:
           packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
+
+      - name: Download DirectXShaderCompiler binaries for dxil / dxcompiler (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64/arm64) 
+        if: ${{ !matrix.sdlshadercross-vendored && matrix.platform != 'ios' && matrix.platform != 'android' }}
+        run: |
+          cd sdl_shadercross-src
+          cmake -P build-scripts/download-prebuilt-DirectXShaderCompiler.cmake
+          echo "DirectXShaderCompiler_ROOT=${PWD}/external/DirectXShaderCompiler-binaries" >> ${GITHUB_ENV}
+
+      - name: Build SPIRV-Cross (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64/arm64) / macOS (x64/arm64)
+        if: ${{ matrix.build-spirv-cross }}
+        run: |
+          cd sdl_shadercross-src
+
+          cmake -S external/SPIRV-Cross -B spirv_cross_build -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSPIRV_CROSS_SHARED=ON \
+            -DSPIRV_CROSS_STATIC=ON \
+            -DCMAKE_INSTALL_PREFIX=${PWD}/spirv_cross_prefix \
+            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
+          cmake --build spirv_cross_build
+          cmake --install spirv_cross_build
+
+          spirv_cross_prefix=${PWD}/spirv_cross_prefix
+          if [[ "${{ matrix.platform }}" == "windows-x64" || "${{ matrix.platform }}" == "windows-arm64" ]]; then
+            spirv_cross_prefix=$(cygpath -w "${spirv_cross_prefix}")
+          fi
+          joiner="${{ (contains(matrix.platform, 'windows') && ';') || ':' }}"
+          echo "spirv_cross_c_shared_ROOT=${spirv_cross_prefix}${joiner}${spirv_cross_prefix}/share/spirv_cross_c_shared" >> ${GITHUB_ENV}
+
+      - name: Configure CMake (for SDL3_shadercross) - All Platforms
+        run: |
+          cd sdl_shadercross-src
+          cmake -S . -B build -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSDLSHADERCROSS_SHARED=ON \
+            -DSDLSHADERCROSS_STATIC=ON \
+            -DSDLSHADERCROSS_VENDORED=${{ matrix.sdlshadercross-vendored }} \
+            -DSDLSHADERCROSS_CLI=ON \
+            -DSDLSHADERCROSS_WERROR=ON \
+            -DSDLSHADERCROSS_INSTALL=ON \
+            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
+            -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
+            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || matrix.platform == 'ios' && '-DCMAKE_SYSTEM_NAME=iOS -CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }}' || '' }}
+        
+      - name: Build SDL3_shadercross with CMake - All Platforms
+        run: |
+          cd sdl_shadercross-src
+          cmake --build build --config Release --parallel --verbose
+
+      - name: Install SDL3_shadercross with CMake - All Platforms
+        run: |
+          cd sdl_shadercross-src
+          cmake --install build --config Release
+          echo "SDL3_shadercross_ROOT=${PWD}/prefix" >> ${GITHUB_ENV}
+          
+      - name: Upload SDL3_shadercross Artifacts - All Platforms
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: sdl3_shadercross-${{ matrix.platform }}
+          path: build/dist/SDL*
 
       - name: Build OpenSSL - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -682,7 +789,7 @@ jobs:
         with:
           name: onnxruntime-ios-arm64
           path: build-onnxruntime
-
+  
   combine-artifacts:
     name: Combine OpenSSL and ONNX Runtime Artifacts
     needs: build-libs
