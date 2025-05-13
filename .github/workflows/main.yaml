@@ -251,10 +251,11 @@ jobs:
           discriminator: ${{ matrix.platform }}
           cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
           
-      - name: Configure CMake (for SDL3_shadercross) - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
+      - name: Build SDL3_shadercross - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-x64' && matrix.platform != 'windows-arm64' }}
         run: |
           cd sdl_shadercross-src
+          
           cmake -S . -B build -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -DSDLSHADERCROSS_DXC=ON \
@@ -268,12 +269,18 @@ jobs:
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
             -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
             ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
+        
+          cmake --build build --config Release --parallel --verbose
+          cmake --install build --config Release
   
-      - name: Configure CMake (for SDL3_shadercross) - Windows (x64/arm64)
-        if: ${{ matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' }}
+      - name: Build SDL3_shadercross - Windows (x64)
+        if: matrix.platform == 'windows-x64'
         shell: cmd
         run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+      
           cd sdl_shadercross-src
+      
           cmake -S . -B build -G Ninja ^
             -DCMAKE_BUILD_TYPE=Release ^
             -DSDLSHADERCROSS_DXC=ON ^
@@ -285,20 +292,35 @@ jobs:
             -DSDLSHADERCROSS_WERROR=OFF ^
             -DSDLSHADERCROSS_INSTALL=ON ^
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
-            -DCMAKE_INSTALL_PREFIX="${PWD}\prefix"
-
-      - name: Build SDL3_shadercross with CMake - All Platforms (except iOS/Android)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
-        run: |
-          cd sdl_shadercross-src
+            -DCMAKE_INSTALL_PREFIX="%CD%\prefix"
+      
           cmake --build build --config Release --parallel --verbose
-
-      - name: Install SDL3_shadercross with CMake - All Platforms (except iOS/Android)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
-        run: |
-          cd sdl_shadercross-src
           cmake --install build --config Release
-
+        
+      - name: Build SDL3_shadercross - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+      
+          cd sdl_shadercross-src
+      
+          cmake -S . -B build -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DSDLSHADERCROSS_DXC=ON ^
+            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_STATIC=ON ^
+            -DSDLSHADERCROSS_VENDORED=ON ^
+            -DSDLSHADERCROSS_CLI=ON ^
+            -DSDLSHADERCROSS_WERROR=OFF ^
+            -DSDLSHADERCROSS_INSTALL=ON ^
+            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
+            -DCMAKE_INSTALL_PREFIX="%CD%\prefix"
+      
+          cmake --build build --config Release --parallel --verbose
+          cmake --install build --config Release
+      
       - name: Upload SDL3_shadercross Artifacts - All Platforms (except iOS/Android)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
         uses: actions/upload-artifact@v4
