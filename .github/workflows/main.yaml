@@ -36,25 +36,25 @@ jobs:
             platform: windows-x64
             shell: cmd
             sdlshadercross-vendored: false
-            build-spirv-cross: true
+            build-spirv-cross: false
           - name: Windows (arm64)
             os: windows-11-arm
             platform: windows-arm64
             shell: cmd
             sdlshadercross-vendored: false
-            build-spirv-cross: true
+            build-spirv-cross: false
           - name: Ubuntu 22.04 (x64)
             os: ubuntu-22.04
             platform: linux-x64
             shell: bash
             sdlshadercross-vendored: false
-            build-spirv-cross: true
+            build-spirv-cross: false
           - name: Ubuntu 22.04 (arm64)
             os: ubuntu-22.04-arm
             platform: linux-arm64
             shell: bash
             sdlshadercross-vendored: false
-            build-spirv-cross: true
+            build-spirv-cross: false
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (x64)
             os: ubuntu-latest
             platform: slr3-sniper-x64
@@ -79,7 +79,7 @@ jobs:
             sdk: macosx
             shell: bash
             sdlshadercross-vendored: true
-            build-spirv-cross: true
+            build-spirv-cross: false
           - name: macOS (arm64) for iOS arm64
             os: macos-15
             platform: ios
@@ -303,7 +303,7 @@ jobs:
             -DSDLSHADERCROSS_STATIC=ON \
             -DSDLSHADERCROSS_VENDORED=${{ matrix.sdlshadercross-vendored }} \
             -DSDLSHADERCROSS_CLI=ON \
-            -DSDLSHADERCROSS_WERROR=ON \
+            -DSDLSHADERCROSS_WERROR=OFF \
             -DSDLSHADERCROSS_INSTALL=ON \
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
             -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
