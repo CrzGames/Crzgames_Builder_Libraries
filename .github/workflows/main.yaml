@@ -735,14 +735,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: openssl-macos-x64_arm64
-          path: openssl-src/openssl-macos
+          path: openssl-macos
 
       - name: Upload OpenSSL Artifacts - iOS (arm64)
         if: matrix.platform == 'ios'
         uses: actions/upload-artifact@v4
         with:
           name: openssl-ios-arm64
-          path: openssl-src/openssl-ios
+          path: openssl-ios
 
       - name: Upload OpenSSL Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
