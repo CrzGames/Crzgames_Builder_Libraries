@@ -1,15 +1,40 @@
 # Crzgames Builder Libraries
 
 ## Informations repository
-Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2DCore qui sont plutôt très longue et pas possible dans un CMakeLists.txt. <br />
-Les bibliothèques : OpenSSL, ONNX Runtime. <br />
-Build pour les plateformes / architecture :
-- macOS (x64/arm64)
-- Windows (x64/arm64)
-- Linux (x64/arm64)
-- Steam Linux Runtime 3.0 - Sniper (x64/arm64)
-- Android (arm64-v8a / armeabi-v7a)
-- iOS device (arm64).
+Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2DCore qui sont sois beaucoup trop longue ou sois pas possible dans un CMakeLists.txt. <br />
+Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
+
+## 📋 Plateforme supportés - ONNX Runtime :
+
+| Platform | Architectures | System Version | Compatible |
+|----------|---------------|----------------|------------|
+| **Windows** | x64 / arm64 | Windows 10+  | ✓          |
+| **macOS** | Intel x64 / Apple Silicon arm64 | macOS 15.0+ | ✓ |
+| **iOS/iPadOS** | arm64 (iphoneos) - not iphonesimulator | iOS 18.0+ | ✓ |
+| **Android** | arm64-v8a / armeabi-v7a | Android 9.0+ | ✓ |
+| **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
+| **Steam Linux** | x64 / arm64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |
+| **Steam Deck** | x64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |
+
+## 📋 Plateforme supportés - OpenSSL :
+
+| Platform | Architectures | System Version | Compatible |
+|----------|---------------|----------------|------------|
+| **Windows** | x64 / arm64 | Windows 10+  | ✓          |
+| **Android** | arm64-v8a / armeabi-v7a | Android 9.0+ | ✓ |
+| **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
+| **Steam Linux** | x64 / arm64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |
+| **Steam Deck** | x64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |
+
+## 📋 Plateforme supportés - SDL3_shadercross :
+
+| Platform | Architectures | System Version | Compatible |
+|----------|---------------|----------------|------------|
+| **Windows** | x64 / arm64 | Windows 10+  | ✓          |
+| **macOS** | Intel x64 / Apple Silicon arm64 | macOS 11.0+ | ✓ |
+| **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
+| **Steam Linux** | x64 / arm64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |
+| **Steam Deck** | x64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |
 
 <br />
 
@@ -45,3 +70,8 @@ Build pour les plateformes / architecture :
 
 ### OpenSSL
 - Rien à signaler de particulier.
+
+<br />
+
+### SDL3_shadercross
+- Windows arm64 : l'action "setup-sdl" ne marche pas encore, obliger de construire à partir des sources.
