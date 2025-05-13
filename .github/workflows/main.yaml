@@ -12,7 +12,7 @@ env:
   ANDROID_API: "28"
   OPENSSL_TAG: "openssl-3.5.0"
   ONNXRUNTIME_TAG: "v1.21.1"
-  SDL_SHADERCROSS_TAG: "main"
+  SDL_SHADERCROSS_TAG: "a3aad1ced336ae18f0efc00fd48568f1954775f4"
   ANDROID_NDK_VERSION: "27.2.12479018"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
@@ -181,12 +181,6 @@ jobs:
         with:
           version: 1.12.1
 
-      - name: Setup MSVC Environment (for SDL3_shadercross) - Windows (x64/arm64)
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform == 'windows-x64' && 'amd64' || 'arm64' }}
-        shell: cmd
-
       - name: Install patchelf and libxrandr (for SDL3_shadercross) - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
@@ -239,9 +233,8 @@ jobs:
           packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
 
-      - name: Setup SDL (for SDL3_shadercross) - All Platforms (except iOS/Android)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
-        id: sdl
+      - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (x64/arm64)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-arm64' }}
         uses: libsdl-org/setup-sdl@main
         with:
           cmake-generator: Ninja
@@ -250,29 +243,51 @@ jobs:
           shell: sh
           discriminator: ${{ matrix.platform }}
           cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
-          
-      - name: Build SDL3_shadercross - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-x64' && matrix.platform != 'windows-arm64' }}
-        run: |
-          cd sdl_shadercross-src
-          
-          cmake -S . -B build -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DSDLSHADERCROSS_DXC=ON \
-            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON \
-            -DSDLSHADERCROSS_SHARED=ON \
-            -DSDLSHADERCROSS_STATIC=ON \
-            -DSDLSHADERCROSS_VENDORED=ON \
-            -DSDLSHADERCROSS_CLI=ON \
-            -DSDLSHADERCROSS_WERROR=OFF \
-            -DSDLSHADERCROSS_INSTALL=ON \
-            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
-            -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
-            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
-        
-          cmake --build build --config Release --parallel --verbose
-          cmake --install build --config Release
   
+      - name: Build SDL3 from source - Windows (arm64)
+        # setup-sdl ne fonctionne pas sur Windows arm64
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+      
+          git clone --depth=1 https://github.com/libsdl-org/SDL SDL3-src
+          cd SDL3-src
+      
+          cmake -B ../SDL3-build -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DSDL_STATIC=OFF ^
+            -DCMAKE_SYSTEM_PROCESSOR=ARM64 ^
+            -DCMAKE_INSTALL_PREFIX="%CD%\..\SDL3-arm64" ^
+            -DSDL_INSTALL_CMAKE_DIR=lib/cmake/SDL3
+      
+          cmake --build ../SDL3-build --target install
+        
+      - name: Build SDL3_shadercross - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+      
+          cd sdl_shadercross-src
+      
+          cmake -S . -B build -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DSDLSHADERCROSS_DXC=ON ^
+            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_STATIC=ON ^
+            -DSDLSHADERCROSS_VENDORED=ON ^
+            -DSDLSHADERCROSS_CLI=ON ^
+            -DSDLSHADERCROSS_WERROR=OFF ^
+            -DSDLSHADERCROSS_INSTALL=ON ^
+            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
+            -DCMAKE_INSTALL_PREFIX="%CD%\prefix" ^
+            -DCMAKE_PREFIX_PATH="%CD%\..\SDL3-arm64\cmake"
+      
+          cmake --build build --config Release --parallel --verbose
+          cmake --install build --config Release        
+
       - name: Build SDL3_shadercross - Windows (x64)
         if: matrix.platform == 'windows-x64'
         shell: cmd
@@ -296,28 +311,26 @@ jobs:
       
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
-        
-      - name: Build SDL3_shadercross - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
-        shell: cmd
+
+      - name: Build SDL3_shadercross - Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (x64/arm64)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-x64' && matrix.platform != 'windows-arm64' }}
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
-      
           cd sdl_shadercross-src
-      
-          cmake -S . -B build -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DSDLSHADERCROSS_DXC=ON ^
-            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON ^
-            -DSDLSHADERCROSS_SHARED=ON ^
-            -DSDLSHADERCROSS_STATIC=ON ^
-            -DSDLSHADERCROSS_VENDORED=ON ^
-            -DSDLSHADERCROSS_CLI=ON ^
-            -DSDLSHADERCROSS_WERROR=OFF ^
-            -DSDLSHADERCROSS_INSTALL=ON ^
-            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
-            -DCMAKE_INSTALL_PREFIX="%CD%\prefix"
-      
+          
+          cmake -S . -B build -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSDLSHADERCROSS_DXC=ON \
+            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON \
+            -DSDLSHADERCROSS_SHARED=ON \
+            -DSDLSHADERCROSS_STATIC=ON \
+            -DSDLSHADERCROSS_VENDORED=ON \
+            -DSDLSHADERCROSS_CLI=ON \
+            -DSDLSHADERCROSS_WERROR=OFF \
+            -DSDLSHADERCROSS_INSTALL=ON \
+            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
+            -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
+            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
+        
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
       
@@ -907,6 +920,22 @@ jobs:
           zip -r ../onnxruntime-macos.zip macos/*
           zip -r ../onnxruntime-ios.zip ios/*
 
+      - name: Generate release notes
+        run: |
+          OPENSSL_TAG="${{ env.OPENSSL_TAG }}"
+          ONNX_TAG="${{ env.ONNXRUNTIME_TAG }}"
+          SDL_SHADERCROSS_TAG="${{ env.SDL_SHADERCROSS_TAG }}"
+      
+          OPENSSL_VERSION="${OPENSSL_TAG#openssl-}"
+          ONNX_VERSION="${ONNX_TAG#v}"
+          SDL_SHADERCROSS_VERSION="${SDL_SHADERCROSS_TAG}"
+      
+          echo "## Build Dependencies Versions" > release_notes.md
+          echo "" >> release_notes.md
+          echo "- OpenSSL: $OPENSSL_VERSION" >> release_notes.md
+          echo "- ONNX Runtime: $ONNX_VERSION" >> release_notes.md
+          echo "- SDL3_shadercross: $SDL_SHADERCROSS_VERSION" >> release_notes.md
+
       - name: Deploy assets to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
@@ -921,3 +950,5 @@ jobs:
             onnxruntime-slr3-sniper.zip
             onnxruntime-macos.zip
             onnxruntime-ios.zip
+          body_path: release_notes.md
+          #token:
