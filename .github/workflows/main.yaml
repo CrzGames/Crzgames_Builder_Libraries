@@ -1,4 +1,4 @@
-name: Build ONNX Runtime and OpenSSL
+name: Build ONNX Runtime, OpenSSL and SDL3_shadercross
 
 on:
   push:
@@ -251,8 +251,8 @@ jobs:
           discriminator: ${{ matrix.platform }}
           cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
           
-      - name: Configure CMake (for SDL3_shadercross) - All Platforms (except iOS/Android)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
+      - name: Configure CMake (for SDL3_shadercross) - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-x64' && matrix.platform != 'windows-arm64' }}
         run: |
           cd sdl_shadercross-src
           cmake -S . -B build -GNinja \
@@ -268,8 +268,25 @@ jobs:
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
             -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
             ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
-        shell: bash
-      
+  
+      - name: Configure CMake (for SDL3_shadercross) - Windows (x64/arm64)
+        if: ${{ matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' }}
+        shell: cmd
+        run: |
+          cd sdl_shadercross-src
+          cmake -S . -B build -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DSDLSHADERCROSS_DXC=ON ^
+            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_STATIC=ON ^
+            -DSDLSHADERCROSS_VENDORED=ON ^
+            -DSDLSHADERCROSS_CLI=ON ^
+            -DSDLSHADERCROSS_WERROR=OFF ^
+            -DSDLSHADERCROSS_INSTALL=ON ^
+            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
+            -DCMAKE_INSTALL_PREFIX="${PWD}\prefix"
+
       - name: Build SDL3_shadercross with CMake - All Platforms (except iOS/Android)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
         run: |
@@ -772,7 +789,7 @@ jobs:
           path: build-onnxruntime
   
   combine-artifacts:
-    name: Combine OpenSSL and ONNX Runtime Artifacts
+    name: Combine artifacts
     needs: build-libs
     runs-on: ubuntu-latest
     steps:
