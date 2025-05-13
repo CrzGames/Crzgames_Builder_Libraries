@@ -35,40 +35,28 @@ jobs:
             os: windows-2025
             platform: windows-x64
             shell: cmd
-            sdlshadercross-vendored: false
-            build-spirv-cross: false
           - name: Windows (arm64)
             os: windows-11-arm
             platform: windows-arm64
             shell: cmd
-            sdlshadercross-vendored: false
-            build-spirv-cross: false
           - name: Ubuntu 22.04 (x64)
             os: ubuntu-22.04
             platform: linux-x64
             shell: bash
-            sdlshadercross-vendored: false
-            build-spirv-cross: false
           - name: Ubuntu 22.04 (arm64)
             os: ubuntu-22.04-arm
             platform: linux-arm64
             shell: bash
-            sdlshadercross-vendored: false
-            build-spirv-cross: false
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (x64)
             os: ubuntu-latest
             platform: slr3-sniper-x64
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:3.0.20250408.124536"
             shell: bash
-            sdlshadercross-vendored: true
-            build-spirv-cross: false
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
             os: ubuntu-24.04-arm
             platform: slr3-sniper-arm64
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250408.124536"
             shell: bash
-            sdlshadercross-vendored: true
-            build-spirv-cross: false
           - name: Ubuntu 24.04 (x64) for Android
             os: ubuntu-latest
             platform: android
@@ -78,8 +66,6 @@ jobs:
             platform: macos
             sdk: macosx
             shell: bash
-            sdlshadercross-vendored: true
-            build-spirv-cross: false
           - name: macOS (arm64) for iOS arm64
             os: macos-15
             platform: ios
@@ -265,50 +251,25 @@ jobs:
           discriminator: ${{ matrix.platform }}
           cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
           
-      - name: Download DirectXShaderCompiler binaries for dxil / dxcompiler (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64/arm64) 
-        if: ${{ !matrix.sdlshadercross-vendored && matrix.platform != 'ios' && matrix.platform != 'android' }}
-        run: |
-          cd sdl_shadercross-src
-          cmake -P build-scripts/download-prebuilt-DirectXShaderCompiler.cmake
-          echo "DirectXShaderCompiler_ROOT=${PWD}/external/DirectXShaderCompiler-binaries" >> ${GITHUB_ENV}
-
-      - name: Build SPIRV-Cross (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64/arm64) / macOS (x64/arm64)
-        if: ${{ matrix.build-spirv-cross && matrix.platform != 'ios' && matrix.platform != 'android' }}
-        run: |
-          cd sdl_shadercross-src
-
-          cmake -S external/SPIRV-Cross -B spirv_cross_build -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DSPIRV_CROSS_SHARED=ON \
-            -DSPIRV_CROSS_STATIC=ON \
-            -DCMAKE_INSTALL_PREFIX=${PWD}/spirv_cross_prefix \
-            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
-          cmake --build spirv_cross_build
-          cmake --install spirv_cross_build
-
-          spirv_cross_prefix=${PWD}/spirv_cross_prefix
-          if [[ "${{ matrix.platform }}" == "windows-x64" || "${{ matrix.platform }}" == "windows-arm64" ]]; then
-            spirv_cross_prefix=$(cygpath -w "${spirv_cross_prefix}")
-          fi
-          joiner="${{ (contains(matrix.platform, 'windows') && ';') || ':' }}"
-          echo "spirv_cross_c_shared_ROOT=${spirv_cross_prefix}${joiner}${spirv_cross_prefix}/share/spirv_cross_c_shared" >> ${GITHUB_ENV}
-
       - name: Configure CMake (for SDL3_shadercross) - All Platforms (except iOS/Android)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
         run: |
           cd sdl_shadercross-src
           cmake -S . -B build -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
+            -DSDLSHADERCROSS_DXC=ON \
+            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON \
             -DSDLSHADERCROSS_SHARED=ON \
             -DSDLSHADERCROSS_STATIC=ON \
-            -DSDLSHADERCROSS_VENDORED=${{ matrix.sdlshadercross-vendored }} \
+            -DSDLSHADERCROSS_VENDORED=ON \
             -DSDLSHADERCROSS_CLI=ON \
             -DSDLSHADERCROSS_WERROR=OFF \
             -DSDLSHADERCROSS_INSTALL=ON \
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
             -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
             ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
-        
+        shell: bash
+      
       - name: Build SDL3_shadercross with CMake - All Platforms (except iOS/Android)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
         run: |
@@ -320,7 +281,6 @@ jobs:
         run: |
           cd sdl_shadercross-src
           cmake --install build --config Release
-          echo "SDL3_shadercross_ROOT=${PWD}/prefix" >> ${GITHUB_ENV}
 
       - name: Upload SDL3_shadercross Artifacts - All Platforms (except iOS/Android)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
