@@ -103,6 +103,7 @@ jobs:
           path: openssl-src
 
       - name: Checkout SDL3_shadercross
+        if: matrix.platform != 'ios' && matrix.platform != 'android'
         uses: actions/checkout@v4
         with:
           repository: libsdl-org/SDL_shadercross
@@ -188,28 +189,32 @@ jobs:
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
-      - name: Setup SDL (for SDL3_shadercross) - All Platforms
-        id: sdl
-        uses: libsdl-org/setup-sdl@main
+      - name: Setup Ninja (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64) / SLR3 Sniper (x64) / macOS (x64/arm64)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'linux-arm64' && matrix.platform != 'slr3-sniper-arm64' }}
+        uses: ashutoshvarma/setup-ninja@master
         with:
-          cmake-generator: Ninja
-          version: 3-head
-          sdl-test: false
-          shell: sh
-          discriminator: ${{ matrix.platform }}
-          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
-
-      - name: Install patchelf (for SDL3_shadercross) - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y patchelf
+          version: 1.12.1
 
       - name: Setup MSVC Environment (for SDL3_shadercross) - Windows (x64/arm64)
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform == 'windows-x64' && 'amd64' || 'arm64' }}
         shell: cmd
+
+      - name: Install patchelf and libxrandr (for SDL3_shadercross) - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          # patchelf est nécessaire pour corriger le chemin d'exécution de libSDL3.so.0
+          # libxrandr-dev est nécessaire à vulkan-loader pour SDL3_shadercross
+          sudo apt-get update -y
+          sudo apt-get install -y patchelf libxrandr-dev
+
+      - name: Install bison (for SDL3_shadercross) - macOS (x64/arm64)
+        if: ${{ matrix.platform == 'macos' }}
+        run: |
+          # bison is needed by vkd3d
+          brew install bison
+          echo "/opt/homebrew/opt/bison/bin" >> $GITHUB_PATH
 
       - name: Setup NASM (for OpenSSL) - Windows (x64/arm64)
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
@@ -248,6 +253,18 @@ jobs:
           packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
 
+      - name: Setup SDL (for SDL3_shadercross) - All Platforms (except iOS/Android)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
+        id: sdl
+        uses: libsdl-org/setup-sdl@main
+        with:
+          cmake-generator: Ninja
+          version: 3-head
+          sdl-test: false
+          shell: sh
+          discriminator: ${{ matrix.platform }}
+          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
+          
       - name: Download DirectXShaderCompiler binaries for dxil / dxcompiler (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64/arm64) 
         if: ${{ !matrix.sdlshadercross-vendored && matrix.platform != 'ios' && matrix.platform != 'android' }}
         run: |
@@ -256,7 +273,7 @@ jobs:
           echo "DirectXShaderCompiler_ROOT=${PWD}/external/DirectXShaderCompiler-binaries" >> ${GITHUB_ENV}
 
       - name: Build SPIRV-Cross (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64/arm64) / macOS (x64/arm64)
-        if: ${{ matrix.build-spirv-cross }}
+        if: ${{ matrix.build-spirv-cross && matrix.platform != 'ios' && matrix.platform != 'android' }}
         run: |
           cd sdl_shadercross-src
 
@@ -276,7 +293,8 @@ jobs:
           joiner="${{ (contains(matrix.platform, 'windows') && ';') || ':' }}"
           echo "spirv_cross_c_shared_ROOT=${spirv_cross_prefix}${joiner}${spirv_cross_prefix}/share/spirv_cross_c_shared" >> ${GITHUB_ENV}
 
-      - name: Configure CMake (for SDL3_shadercross) - All Platforms
+      - name: Configure CMake (for SDL3_shadercross) - All Platforms (except iOS/Android)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
         run: |
           cd sdl_shadercross-src
           cmake -S . -B build -GNinja \
@@ -289,25 +307,28 @@ jobs:
             -DSDLSHADERCROSS_INSTALL=ON \
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
             -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
-            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || matrix.platform == 'ios' && '-DCMAKE_SYSTEM_NAME=iOS -CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }}' || '' }}
+            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
         
-      - name: Build SDL3_shadercross with CMake - All Platforms
+      - name: Build SDL3_shadercross with CMake - All Platforms (except iOS/Android)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
         run: |
           cd sdl_shadercross-src
           cmake --build build --config Release --parallel --verbose
 
-      - name: Install SDL3_shadercross with CMake - All Platforms
+      - name: Install SDL3_shadercross with CMake - All Platforms (except iOS/Android)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
         run: |
           cd sdl_shadercross-src
           cmake --install build --config Release
           echo "SDL3_shadercross_ROOT=${PWD}/prefix" >> ${GITHUB_ENV}
-          
-      - name: Upload SDL3_shadercross Artifacts - All Platforms
+
+      - name: Upload SDL3_shadercross Artifacts - All Platforms (except iOS/Android)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: sdl3_shadercross-${{ matrix.platform }}
-          path: build/dist/SDL*
+          path: sdl_shadercross-src/prefix
 
       - name: Build OpenSSL - Windows (x64)
         if: matrix.platform == 'windows-x64'
