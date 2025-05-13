@@ -11,6 +11,7 @@ env:
   IOS_DEPLOYMENT_TARGET: "18.0"
   ANDROID_API: "28"
   OPENSSL_TAG: "openssl-3.5.0"
+  OPENSSL_APPLE_TAG: "3.3.3001"
   ONNXRUNTIME_TAG: "v1.21.1"
   SDL_SHADERCROSS_TAG: "a3aad1ced336ae18f0efc00fd48568f1954775f4"
   ANDROID_NDK_VERSION: "27.2.12479018"
@@ -73,14 +74,14 @@ jobs:
             shell: bash
       fail-fast: false
     steps:
-      - name: Checkout ONNX Runtime
+      - name: Checkout ONNX Runtime - All Platforms
         uses: actions/checkout@v4
         with:
           repository: Microsoft/onnxruntime
           ref: ${{ env.ONNXRUNTIME_TAG }}
           submodules: recursive
 
-      - name: Checkout OpenSSL
+      - name: Checkout OpenSSL - All Platforms (except macOS / iOS)
         if: matrix.platform != 'macos' && matrix.platform != 'ios'
         uses: actions/checkout@v4
         with:
@@ -88,7 +89,15 @@ jobs:
           ref: ${{ env.OPENSSL_TAG }}
           path: openssl-src
 
-      - name: Checkout SDL3_shadercross
+      - name: Checkout OpenSSL - macOS (x64/arm64) / iOS (arm64)
+        if: matrix.platform == 'macos' || matrix.platform == 'ios'
+        uses: actions/checkout@v4
+        with:
+          repository: krzyzanowskim/OpenSSL
+          ref: ${{ env.OPENSSL_APPLE_TAG }}
+          path: openssl-src
+      
+      - name: Checkout SDL3_shadercross - All Platforms (except iOS / Android)
         if: matrix.platform != 'ios' && matrix.platform != 'android'
         uses: actions/checkout@v4
         with:
@@ -242,7 +251,7 @@ jobs:
           sdl-test: false
           shell: sh
           discriminator: ${{ matrix.platform }}
-          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
+          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
   
       - name: Build SDL3 from source - Windows (arm64)
         # setup-sdl ne fonctionne pas sur Windows arm64
@@ -333,6 +342,26 @@ jobs:
         
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
+
+      - name: Get libraire OpenSSL - macOS (x64/arm64)
+        if: matrix.platform == 'macos'
+        run: |
+          cd openssl-src
+          mkdir -p openssl-macos/include
+          mkdir -p openssl-macos/lib
+          cp -a openssl-src/macosx/include/* openssl-macos/include/
+          cp -a openssl-src/macosx/lib/* openssl-macos/lib/
+        shell: bash
+
+      - name: Get libraire OpenSSL - iOS (arm64)
+        if: matrix.platform == 'ios'
+        run: |
+          cd openssl-src
+          mkdir -p openssl-ios/include
+          mkdir -p openssl-ios/lib
+          cp -a openssl-src/iphoneos/include/* openssl-ios/include/
+          cp -a openssl-src/iphoneos/lib/* openssl-ios/lib/
+        shell: bash
 
       - name: Build OpenSSL - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -703,11 +732,25 @@ jobs:
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/
         shell: bash
 
+      - name: Upload OpenSSL Artifacts - macOS (x64 / arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: openssl-macos-x64_arm64
+          path: openssl-src/openssl-macos
+
+      - name: Upload OpenSSL Artifacts - iOS (arm64)
+        if: matrix.platform == 'ios'
+        uses: actions/upload-artifact@v4
+        with:
+          name: openssl-ios-arm64
+          path: openssl-src/openssl-ios
+
       - name: Upload OpenSSL Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
         uses: actions/upload-artifact@v4
         with:
-          name: openssl-android
+          name: openssl-android-arm64v8a_armeabiv7a
           path: openssl-android/
 
       - name: Upload OpenSSL Artifacts - SLR3 Sniper (x64)
