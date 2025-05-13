@@ -333,14 +333,6 @@ jobs:
         
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
-      
-      - name: Upload SDL3_shadercross Artifacts - All Platforms (except iOS/Android)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
-        uses: actions/upload-artifact@v4
-        with:
-          if-no-files-found: error
-          name: sdl3_shadercross-${{ matrix.platform }}
-          path: sdl_shadercross-src/prefix
 
       - name: Build OpenSSL - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -823,6 +815,14 @@ jobs:
           name: onnxruntime-ios-arm64
           path: build-onnxruntime
   
+      - name: Upload SDL3_shadercross Artifacts - All Platforms (except iOS/Android)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: sdl3_shadercross-${{ matrix.platform }}
+          path: sdl_shadercross-src/prefix
+
   combine-artifacts:
     name: Combine artifacts
     needs: build-libs
