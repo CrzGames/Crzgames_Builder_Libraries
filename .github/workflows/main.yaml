@@ -751,7 +751,7 @@ jobs:
         if: matrix.platform == 'macos'
         uses: actions/upload-artifact@v4
         with:
-          name: openssl-macos-x64_arm64
+          name: openssl-macos-arm64
           path: openssl-macos
 
       - name: Upload OpenSSL Artifacts - iOS (arm64)
@@ -863,7 +863,7 @@ jobs:
         if: matrix.platform == 'macos'
         uses: actions/upload-artifact@v4
         with:
-          name: onnxruntime-macos-x64_arm64
+          name: onnxruntime-macos-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - iOS (arm64)
