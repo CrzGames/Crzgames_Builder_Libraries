@@ -133,13 +133,14 @@ jobs:
           cmake-version: ${{ env.CMAKE_VERSION_OTHER }}
 
       - name: Install GCC 14 Experimental (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
-        # ONNX Runtime à ce jour dois avoir minimum : GCC >= 11.1.0, actuellement par défaut sur SLR3 Sniper c'est GCC 10
         if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        shell: bash
         run: |
           apt-get update
           apt-get install -y gcc-14-monolithic
           echo "PATH=/usr/lib/gcc-14/bin:$PATH" >> $GITHUB_ENV
-        shell: bash
+          echo "CC=/usr/lib/gcc-14/bin/gcc" >> $GITHUB_ENV
+          echo "CXX=/usr/lib/gcc-14/bin/g++" >> $GITHUB_ENV
 
       - name: Compile Python from source (for ONNX Runtime) - SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'slr3-sniper-arm64' || matrix.platform == 'slr3-sniper-x64'
