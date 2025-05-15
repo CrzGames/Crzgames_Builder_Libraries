@@ -142,7 +142,7 @@ jobs:
           echo "CC=/usr/lib/gcc-14/bin/gcc" >> $GITHUB_ENV
           echo "CXX=/usr/lib/gcc-14/bin/g++" >> $GITHUB_ENV
 
-      - name: Build and install binutils (gas) 2.44 - SLR3 Sniper (x64/arm64)
+      - name: Build and install binutils 2.44 (for ONNX Runtime) - SLR3 Sniper (x64/arm64)
         # Permet de fixé un probleme avec onnxruntime >= 1.22.0
         # Issue github : https://github.com/microsoft/onnxruntime/issues/24653
         if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
