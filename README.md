@@ -64,6 +64,7 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 #### Linux / Steam Linux Runtime 3.0 (Sniper) :
 - Linux x64/arm64 possible.
 - XNN (Execution Providers)
+- GCC >= 11.1
 
 #### Android :
 - Android arm64-v8a/armeabi-v7a possible.
