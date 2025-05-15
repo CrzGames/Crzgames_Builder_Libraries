@@ -32,7 +32,7 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 
 | Platform | Architectures | System Version | Compatible |
 |----------|---------------|----------------|------------|
-| **Windows** | x64 / arm64 | Windows 10+  | ✓          |
+| **Windows** | x64 / arm64 | Windows 10+  | ✓           |
 | **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
 | **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
 | **Steam Linux** | x64 / arm64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |

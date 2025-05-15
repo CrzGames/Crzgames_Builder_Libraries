@@ -89,7 +89,7 @@ jobs:
           ref: ${{ env.OPENSSL_TAG }}
           path: openssl-src
 
-      - name: Checkout OpenSSL - macOS (x64/arm64) / iOS (arm64)
+      - name: Checkout OpenSSL - macOS (arm64) / iOS (arm64)
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         uses: actions/checkout@v4
         with:
@@ -119,7 +119,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION_OTHER }}
 
-      - name: Setup CMake v3.31.0 maximum (for ONNX Runtime) - macOS (x64/arm64) / iOS
+      - name: Setup CMake v3.31.0 maximum (for ONNX Runtime) - macOS (arm64) / iOS (arm64)
         # Ne pas passer à la version 4.x.x, --use_coreml ne fonctionnera pas avec CMake 4.x.x
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         uses: jwlawson/actions-setup-cmake@v2
@@ -184,7 +184,7 @@ jobs:
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
-      - name: Setup Ninja (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64) / SLR3 Sniper (x64) / macOS (x64/arm64)
+      - name: Setup Ninja (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64) / SLR3 Sniper (x64) / macOS (arm64)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'linux-arm64' && matrix.platform != 'slr3-sniper-arm64' }}
         uses: ashutoshvarma/setup-ninja@master
         with:
@@ -198,7 +198,7 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y patchelf libxrandr-dev
 
-      - name: Install bison (for SDL3_shadercross) - macOS (x64/arm64)
+      - name: Install bison (for SDL3_shadercross) - macOS (arm64)
         if: ${{ matrix.platform == 'macos' }}
         run: |
           # bison is needed by vkd3d
@@ -242,7 +242,7 @@ jobs:
           packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
 
-      - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (x64/arm64)
+      - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-arm64' }}
         uses: libsdl-org/setup-sdl@main
         with:
@@ -736,7 +736,7 @@ jobs:
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/onnxruntime
         shell: bash
 
-      - name: Upload OpenSSL Artifacts - macOS (x64 / arm64)
+      - name: Upload OpenSSL Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
         uses: actions/upload-artifact@v4
         with:
@@ -848,7 +848,7 @@ jobs:
           name: onnxruntime-android-arm64v8a_armeabiv7a
           path: build-onnxruntime
 
-      - name: Upload ONNX Runtime Artifacts - macOS (x64 / arm64)
+      - name: Upload ONNX Runtime Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
         uses: actions/upload-artifact@v4
         with:
@@ -942,7 +942,7 @@ jobs:
           cp -a temp/onnxruntime-slr3-sniper-arm64/include/* merged2/slr3-sniper/include/
           cp -a temp/onnxruntime-slr3-sniper-arm64/lib/* merged2/slr3-sniper/lib/arm64/
 
-          # macOS (x64 / arm64)
+          # macOS (arm64)
           mkdir -p merged2/macos/include merged2/macos/lib
           cp -a temp/onnxruntime-macos/include/* merged2/macos/include/
           cp -a temp/onnxruntime-macos/lib/* merged2/macos/lib/
