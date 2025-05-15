@@ -54,6 +54,7 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 - iOS/macOS : Utiliser CMake 3.28 (minimum demandé par ONNX Runtime) à 3.31 (après cette version c'est CMake version 4.x.x, et fait planter avec le flag : --use_coreml)
 - iOS 13.0 et ultérieurs (vu que le flag --use_coreml demande iOS 13.0+)
 - IMPORTANT iOS/macOS : Pour utilisé CoreML il faut linker "-framework CoreML"
+- Ce n'ai pas indiquer sur la doc mais on peux faire ça pour toute les plateformes Apple (au lieu de --build_shared_lib) : --use_xcode et --build_apple_framework puis : --ios, --macos, --visionos, ou --tvos
 
 #### Windows :
 - Windows x64/arm64 possible.
