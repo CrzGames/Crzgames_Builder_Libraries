@@ -555,7 +555,7 @@ jobs:
           Copy-Item -Path include\onnxruntime\core\providers\dml\dml_provider_factory.h -Destination "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
         shell: pwsh
 
-      - name: Build ONNX Runtime - Linux (arm64)
+      - name: Build ONNX Runtime - Linux (x64/arm64)
         if: matrix.platform == 'linux-arm64' || matrix.platform == 'linux-x64'
         run: |
           ./build.sh \
