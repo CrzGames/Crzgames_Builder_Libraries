@@ -729,7 +729,7 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
 
           mkdir -p build-onnxruntime build-onnxruntime/lib build-onnxruntime/include/onnxruntime
-          cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/onnxruntime.a
+          cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/lib/onnxruntime.a
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/onnxruntime
         shell: bash
 
