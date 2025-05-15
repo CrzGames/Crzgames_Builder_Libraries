@@ -9,7 +9,7 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 | Platform | Architectures | System Version | Compatible |
 |----------|---------------|----------------|------------|
 | **Windows** | x64 / arm64 | Windows 10+  | ✓          |
-| **macOS** | Intel x64 / Apple Silicon arm64 | macOS 15.0+ | ✓ |
+| **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
 | **iOS/iPadOS** | arm64 (iphoneos) - not iphonesimulator | iOS 18.0+ | ✓ |
 | **Android** | arm64-v8a / armeabi-v7a | Android 9.0+ | ✓ |
 | **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
@@ -33,7 +33,7 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 | Platform | Architectures | System Version | Compatible |
 |----------|---------------|----------------|------------|
 | **Windows** | x64 / arm64 | Windows 10+  | ✓          |
-| **macOS** | Intel x64 / Apple Silicon arm64 | macOS 11.0+ | ✓ |
+| **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
 | **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
 | **Steam Linux** | x64 / arm64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |
 | **Steam Deck** | x64 | Steam Linux Runtime 3.0 (Sniper) | ✓ |

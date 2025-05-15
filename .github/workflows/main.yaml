@@ -62,7 +62,7 @@ jobs:
             os: ubuntu-latest
             platform: android
             shell: bash
-          - name: macOS (arm64) for macOS x64/arm64
+          - name: macOS (arm64)
             os: macos-15
             platform: macos
             sdk: macosx
@@ -251,7 +251,7 @@ jobs:
           sdl-test: false
           shell: sh
           discriminator: ${{ matrix.platform }}
-          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
+          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
   
       - name: Build SDL3 from source - Windows (arm64)
         # setup-sdl ne fonctionne pas sur Windows arm64
@@ -321,7 +321,7 @@ jobs:
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
 
-      - name: Build SDL3_shadercross - Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (x64/arm64)
+      - name: Build SDL3_shadercross - Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-x64' && matrix.platform != 'windows-arm64' }}
         run: |
           cd sdl_shadercross-src
@@ -338,12 +338,12 @@ jobs:
             -DSDLSHADERCROSS_INSTALL=ON \
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
             -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
-            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=11.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=11.0"' || '' }}
+            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
         
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
 
-      - name: Get libraire OpenSSL - macOS (x64/arm64)
+      - name: Get libraire OpenSSL - macOS (arm64)
         if: matrix.platform == 'macos'
         run: |
           mkdir -p openssl-macos/include
@@ -677,7 +677,7 @@ jobs:
           cp include/onnxruntime/core/providers/nnapi/nnapi_provider_factory.h build-onnxruntime/include/onnxruntime
         shell: bash
 
-      - name: Build ONNX Runtime - macOS (x64 / arm64)
+      - name: Build ONNX Runtime - macOS (arm64)
         if: matrix.platform == 'macos'
         shell: bash
         run: |
