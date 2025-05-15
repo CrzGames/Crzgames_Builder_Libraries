@@ -681,13 +681,15 @@ jobs:
         if: matrix.platform == 'macos'
         shell: bash
         run: |
-          # Build fat binary
+          # Build x86_64 binary
           ./build.sh \
             --config Release \
             --use_coreml \
             --use_xcode \
-            --macos \
+            --macos MacOSX \
+            --apple_sysroot macosx \
             --build_apple_framework \
+            --apple_deploy_target ${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
             --parallel \
             --compile_no_warning_as_error \
             --skip_submodule_sync \
@@ -695,8 +697,26 @@ jobs:
             --build \
             --skip_tests \
             --cmake_extra_defines \
-              CMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-              CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
+              CMAKE_OSX_ARCHITECTURES="x86_64" \
+              onnxruntime_BUILD_UNIT_TESTS=OFF
+
+          # Build arm64 binary
+          ./build.sh \
+            --config Release \
+            --use_coreml \
+            --use_xcode \
+            --macos MacOSX \
+            --apple_sysroot macosx \
+            --build_apple_framework \
+            --apple_deploy_target ${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
+            --parallel \
+            --compile_no_warning_as_error \
+            --skip_submodule_sync \
+            --update \
+            --build \
+            --skip_tests \
+            --cmake_extra_defines \
+              CMAKE_OSX_ARCHITECTURES="arm64" \
               onnxruntime_BUILD_UNIT_TESTS=OFF
 
           ROOTDIR=$(pwd)
