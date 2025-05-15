@@ -685,7 +685,9 @@ jobs:
           ./build.sh \
             --config Release \
             --use_coreml \
-            --build_shared_lib \
+            --use_xcode \
+            --macos \
+            --build_apple_framework \
             --parallel \
             --compile_no_warning_as_error \
             --skip_submodule_sync \
