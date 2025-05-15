@@ -55,6 +55,7 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 - iOS 13.0 et ultérieurs (vu que le flag --use_coreml demande iOS 13.0+)
 - IMPORTANT iOS/macOS : Pour utilisé CoreML il faut linker "-framework CoreML"
 - Ce n'ai pas indiquer sur la doc mais on peux faire ça pour toute les plateformes Apple (au lieu de --build_shared_lib) : --use_xcode, --build_apple_framework puis requis : --ios, --macos, --visionos, ou --tvos, --apple_sysroot <the location or name of the macOS platform SDK> par exemple : --use_xcode --build_apple_framework --macos MacOSX/Catalyst --apple_sysroot macosx
+- macOS: --build_apple_framework ne permet pas de faire de fat library, obliger deux faire deux fois la commande avec : CMAKE_OSX_ARCHITECTURES="arm64" et CMAKE_OSX_ARCHITECTURES="x86_64" (séparément)
 
 #### Windows :
 - Windows x64/arm64 possible.
