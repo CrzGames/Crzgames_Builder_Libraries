@@ -685,11 +685,7 @@ jobs:
           ./build.sh \
             --config Release \
             --use_coreml \
-            --use_xcode \
-            --macos MacOSX \
-            --apple_sysroot macosx \
-            --build_apple_framework \
-            --osx_arch arm64 \
+            --build_shared_lib \
             --apple_deploy_target ${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
             --parallel \
             --compile_no_warning_as_error \
@@ -698,6 +694,7 @@ jobs:
             --build \
             --skip_tests \
             --cmake_extra_defines \
+              CMAKE_OSX_ARCHITECTURES=arm64 \
               onnxruntime_BUILD_UNIT_TESTS=OFF
 
           ROOTDIR=$(pwd)
