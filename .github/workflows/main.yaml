@@ -479,9 +479,10 @@ jobs:
       
           build_openssl android-arm64 arm64-v8a
           build_openssl android-arm armeabi-v7a
-  
+        
       - name: Build ONNX Runtime - Windows (x64)
         if: matrix.platform == 'windows-x64'
+        shell: pwsh
         run: |
           .\build.bat `
             --config Release `
@@ -495,25 +496,27 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF `
             --use_dml `
             --use_xnnpack
-                    
+
           $ROOTDIR = $PWD
           Write-Output "ROOTDIR is: $ROOTDIR"
-          
-          # Vérifier si les fichiers existent
-          Get-ChildItem -Path build\Windows\Release\Release\onnxruntime.dll
-          Get-ChildItem -Path build\Windows\Release\Release\onnxruntime.lib
-          Get-ChildItem -Path include
-          
-          # Créer les dossiers
+
+          # Créer les dossiers bin/lib/include
           New-Item -ItemType Directory -Path "$ROOTDIR\build-onnxruntime\bin" -Force
           New-Item -ItemType Directory -Path "$ROOTDIR\build-onnxruntime\lib" -Force
-          Get-ChildItem -Path "$ROOTDIR\build-onnxruntime"
-          
-          # Copier les fichiers
+          New-Item -ItemType Directory -Path "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
+
+          # Copier les fichiers binaires et lib
           Copy-Item -Path build\Windows\Release\Release\onnxruntime.dll -Destination "$ROOTDIR\build-onnxruntime\bin\" -Force -ErrorAction Stop
+          Copy-Item -Path build\Windows\Release\Release\onnxruntime_providers_shared.dll -Destination "$ROOTDIR\build-onnxruntime\bin\" -Force -ErrorAction Stop
+          Copy-Item -Path build\Windows\Release\Release\DirectML.dll -Destination "$ROOTDIR\build-onnxruntime\bin\" -Force -ErrorAction Stop
           Copy-Item -Path build\Windows\Release\Release\onnxruntime.lib -Destination "$ROOTDIR\build-onnxruntime\lib\" -Force -ErrorAction Stop
-          Copy-Item -Path include -Destination "$ROOTDIR\build-onnxruntime\" -Recurse -Force -ErrorAction Stop
-        shell: pwsh
+
+          # Copier tous les headers onnxruntime_* dans include/onnxruntime/
+          Copy-Item -Path include\onnxruntime\core\session\onnxruntime_*.h -Destination "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
+
+          # Copier les factory headers des providers (CPU et DML) dans le même dossier
+          Copy-Item -Path include\onnxruntime\core\providers\cpu\cpu_provider_factory.h -Destination "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
+          Copy-Item -Path include\onnxruntime\core\providers\dml\dml_provider_factory.h -Destination "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
 
       - name: Build ONNX Runtime - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
@@ -533,44 +536,27 @@ jobs:
           $ROOTDIR = $PWD
           Write-Output "ROOTDIR is: $ROOTDIR"
           
-          # Vérifier si les fichiers existent
-          Get-ChildItem -Path build\Windows\Release\Release\onnxruntime.dll
-          Get-ChildItem -Path build\Windows\Release\Release\onnxruntime.lib
-          Get-ChildItem -Path include
-          
-          # Créer les dossiers
+          # Créer les dossiers bin/lib/include
           New-Item -ItemType Directory -Path "$ROOTDIR\build-onnxruntime\bin" -Force
           New-Item -ItemType Directory -Path "$ROOTDIR\build-onnxruntime\lib" -Force
-          Get-ChildItem -Path "$ROOTDIR\build-onnxruntime"
-          
-          # Copier les fichiers
+          New-Item -ItemType Directory -Path "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
+
+          # Copier les fichiers binaires et lib
           Copy-Item -Path build\Windows\Release\Release\onnxruntime.dll -Destination "$ROOTDIR\build-onnxruntime\bin\" -Force -ErrorAction Stop
+          Copy-Item -Path build\Windows\Release\Release\onnxruntime_providers_shared.dll -Destination "$ROOTDIR\build-onnxruntime\bin\" -Force -ErrorAction Stop
+          Copy-Item -Path build\Windows\Release\Release\DirectML.dll -Destination "$ROOTDIR\build-onnxruntime\bin\" -Force -ErrorAction Stop
           Copy-Item -Path build\Windows\Release\Release\onnxruntime.lib -Destination "$ROOTDIR\build-onnxruntime\lib\" -Force -ErrorAction Stop
-          Copy-Item -Path include -Destination "$ROOTDIR\build-onnxruntime\" -Recurse -Force -ErrorAction Stop
+
+          # Copier tous les headers onnxruntime_* dans include/onnxruntime/
+          Copy-Item -Path include\onnxruntime\core\session\onnxruntime_*.h -Destination "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
+
+          # Copier les factory headers des providers (CPU et DML) dans le même dossier
+          Copy-Item -Path include\onnxruntime\core\providers\cpu\cpu_provider_factory.h -Destination "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
+          Copy-Item -Path include\onnxruntime\core\providers\dml\dml_provider_factory.h -Destination "$ROOTDIR\build-onnxruntime\include\onnxruntime" -Force
         shell: pwsh
 
-      - name: Build ONNX Runtime - Linux (x64)
-        if: matrix.platform == 'linux-x64'
-        run: |
-          ./build.sh \
-            --config Release \
-            --build_shared_lib \
-            --parallel \
-            --compile_no_warning_as_error \
-            --skip_submodule_sync \
-            --update \
-            --build \
-            --skip_tests \
-            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
-            --use_xnnpack
-
-          mkdir -p build-onnxruntime build-onnxruntime/lib
-          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime/lib
-          cp -a include build-onnxruntime
-        shell: bash
-
       - name: Build ONNX Runtime - Linux (arm64)
-        if: matrix.platform == 'linux-arm64'
+        if: matrix.platform == 'linux-arm64' || matrix.platform == 'linux-x64'
         run: |
           ./build.sh \
             --config Release \
@@ -584,13 +570,22 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
           
-          mkdir -p build-onnxruntime build-onnxruntime/lib
-          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime/lib
-          cp -a include build-onnxruntime
+          ROOTDIR=$(pwd)
+          mkdir -p "$ROOTDIR/build-onnxruntime/lib"
+          mkdir -p "$ROOTDIR/build-onnxruntime/include/onnxruntime"
+
+          # Copier la lib partagée
+          cp -a build/Linux/Release/libonnxruntime.so* "$ROOTDIR/build-onnxruntime/lib"
+
+          # Copier les headers onnxruntime_*.h
+          cp -a include/onnxruntime/core/session/onnxruntime_*.h "$ROOTDIR/build-onnxruntime/include/onnxruntime"
+
+          # Copier le CPU provider factory
+          cp include/onnxruntime/core/providers/cpu/cpu_provider_factory.h "$ROOTDIR/build-onnxruntime/include/onnxruntime"
         shell: bash
 
-      - name: Build ONNX Runtime - SLR3 Sniper (x64)
-        if: matrix.platform == 'slr3-sniper-x64'
+      - name: Build ONNX Runtime - SLR3 Sniper (x64/arm64)
+        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
           ./build.sh \
             --config Release \
@@ -605,30 +600,18 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
             --use_xnnpack
 
-          mkdir -p build-onnxruntime build-onnxruntime/lib
-          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime/lib
-          cp -a include build-onnxruntime
-        shell: bash
+          ROOTDIR=$(pwd)
+          mkdir -p "$ROOTDIR/build-onnxruntime/lib"
+          mkdir -p "$ROOTDIR/build-onnxruntime/include/onnxruntime"
 
-      - name: Build ONNX Runtime - SLR3 Sniper (arm64)
-        if: matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          ./build.sh \
-            --config Release \
-            --build_shared_lib \
-            --parallel \
-            --compile_no_warning_as_error \
-            --skip_submodule_sync \
-            --allow_running_as_root \
-            --update \
-            --build \
-            --skip_tests \
-            --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF \
-            --use_xnnpack 
+          # Copier la lib partagée
+          cp -a build/Linux/Release/libonnxruntime.so* "$ROOTDIR/build-onnxruntime/lib"
 
-          mkdir -p build-onnxruntime build-onnxruntime/lib
-          cp -a build/Linux/Release/libonnxruntime.so* build-onnxruntime/lib
-          cp -a include build-onnxruntime
+          # Copier les headers onnxruntime_*.h
+          cp -a include/onnxruntime/core/session/onnxruntime_*.h "$ROOTDIR/build-onnxruntime/include/onnxruntime"
+
+          # Copier le CPU provider factory
+          cp include/onnxruntime/core/providers/cpu/cpu_provider_factory.h "$ROOTDIR/build-onnxruntime/include/onnxruntime"
         shell: bash
 
       - name: Build ONNX Runtime - Android (arm64-v8a / armeabi-v7a)
@@ -682,12 +665,23 @@ jobs:
           cp -a build/Android/Release/java/build/android/outputs/aar/onnxruntime-release.aar build-onnxruntime/armeabi-v7a/aar
           cp -a build/Android/Release/libonnxruntime.so build-onnxruntime/armeabi-v7a/lib
           cp -a build/Android/Release/libonnxruntime4j_jni.so build-onnxruntime/armeabi-v7a/lib
+
+          # Créer le dossier include commun
+          mkdir -p build-onnxruntime/include/onnxruntime
+
+          # Copier les headers principaux
+          cp -a include/onnxruntime/core/session/onnxruntime_*.h build-onnxruntime/include/onnxruntime
+
+          # Copier les factory headers des execution providers utilisés
+          cp include/onnxruntime/core/providers/cpu/cpu_provider_factory.h build-onnxruntime/include/onnxruntime
+          cp include/onnxruntime/core/providers/nnapi/nnapi_provider_factory.h build-onnxruntime/include/onnxruntime
         shell: bash
 
       - name: Build ONNX Runtime - macOS (x64 / arm64)
         if: matrix.platform == 'macos'
+        shell: bash
         run: |
-          # Build fat binary for x86_64 and arm64
+          # Build fat binary
           ./build.sh \
             --config Release \
             --use_coreml \
@@ -703,11 +697,20 @@ jobs:
               CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
               onnxruntime_BUILD_UNIT_TESTS=OFF
 
-          mkdir -p build-onnxruntime build-onnxruntime/lib
-          cp -a build/MacOS/Release/libonnxruntime.dylib build-onnxruntime/lib
-          cp -a build/MacOS/Release/libonnxruntime.*.dylib build-onnxruntime/lib
-          cp -a include build-onnxruntime
-        shell: bash  
+          ROOTDIR=$(pwd)
+          mkdir -p "$ROOTDIR/build-onnxruntime/lib"
+          mkdir -p "$ROOTDIR/build-onnxruntime/include/onnxruntime"
+
+          # Copier les binaires .dylib (universels)
+          cp -a build/MacOS/Release/libonnxruntime.dylib "$ROOTDIR/build-onnxruntime/lib"
+          cp -a build/MacOS/Release/libonnxruntime.*.dylib "$ROOTDIR/build-onnxruntime/lib"
+
+          # Copier les headers principaux
+          cp -a include/onnxruntime/core/session/onnxruntime_*.h "$ROOTDIR/build-onnxruntime/include/onnxruntime"
+
+          # Copier les provider_factory.h requis
+          cp include/onnxruntime/core/providers/cpu/cpu_provider_factory.h "$ROOTDIR/build-onnxruntime/include/onnxruntime"
+          cp include/onnxruntime/core/providers/coreml/coreml_provider_factory.h "$ROOTDIR/build-onnxruntime/include/onnxruntime" 
 
       - name: Build ONNX Runtime - iOS Device (arm64)
         if: matrix.platform == 'ios'
@@ -725,9 +728,9 @@ jobs:
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
 
-          mkdir -p build-onnxruntime build-onnxruntime/lib build-onnxruntime/include
+          mkdir -p build-onnxruntime build-onnxruntime/lib build-onnxruntime/include/onnxruntime
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/onnxruntime.a
-          cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/
+          cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/onnxruntime
         shell: bash
 
       - name: Upload OpenSSL Artifacts - macOS (x64 / arm64)
