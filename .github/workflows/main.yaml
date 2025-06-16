@@ -17,7 +17,7 @@ env:
   ANDROID_NDK_VERSION: "27.2.12479018"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
-  XCODE_VERSION: "16.3.0"
+  XCODE_VERSION: "16.4.0"
   PYTHON_VERSION_OTHER: "3.13"
   PYTHON_VERSION_SLR3: "3.13.3"
   CMAKE_VERSION_MACOS: "3.31.0"
@@ -51,12 +51,12 @@ jobs:
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (x64)
             os: ubuntu-latest
             platform: slr3-sniper-x64
-            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:3.0.20250408.124536"
+            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:3.0.20250519.130773"
             shell: bash
           - name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
             os: ubuntu-24.04-arm
             platform: slr3-sniper-arm64
-            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250408.124536"
+            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250519.130773"
             shell: bash
           - name: Ubuntu 24.04 (x64) for Android
             os: ubuntu-latest
@@ -209,15 +209,18 @@ jobs:
         run: |
           # patchelf est nécessaire pour corriger le chemin d'exécution de libSDL3.so.0
           # libxrandr-dev est nécessaire à vulkan-loader pour SDL3_shadercross
+          # libjson-perl is a (build-time) dependency of vkd3d 3.16+
           sudo apt-get update -y
-          sudo apt-get install -y patchelf libxrandr-dev
+          sudo apt-get install -y patchelf libxrandr-dev libjson-perl
 
       - name: Install bison (for SDL3_shadercross) - macOS (arm64)
         if: ${{ matrix.platform == 'macos' }}
         run: |
           # bison is needed by vkd3d
-          brew install bison
+          # perl-json is needed by vkd3d 1.16+
+          brew install bison cpanm
           echo "/opt/homebrew/opt/bison/bin" >> $GITHUB_PATH
+          cpanm install JSON
 
       - name: Setup NASM (for OpenSSL) - Windows (x64/arm64)
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64'
