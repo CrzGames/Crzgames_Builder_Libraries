@@ -132,15 +132,15 @@ jobs:
         with:
           cmake-version: ${{ env.CMAKE_VERSION_OTHER }}
 
-      - name: Install GCC 12 Experimental (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
+      - name: Install GCC 14 Experimental (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         shell: bash
         run: |
           apt-get update
-          apt-get install -y gcc-12-monolithic
-          echo "PATH=/usr/lib/gcc-12/bin:$PATH" >> $GITHUB_ENV
-          echo "CC=/usr/lib/gcc-12/bin/gcc" >> $GITHUB_ENV
-          echo "CXX=/usr/lib/gcc-12/bin/g++" >> $GITHUB_ENV
+          apt-get install -y gcc-14-monolithic
+          echo "PATH=/usr/lib/gcc-14/bin:$PATH" >> $GITHUB_ENV
+          echo "CC=/usr/lib/gcc-14/bin/gcc" >> $GITHUB_ENV
+          echo "CXX=/usr/lib/gcc-14/bin/g++" >> $GITHUB_ENV
 
       - name: Build and install binutils 2.44 (for ONNX Runtime) - SLR3 Sniper (x64/arm64)
         # Permet de fixé un probleme avec onnxruntime >= 1.22.0
