@@ -4,6 +4,15 @@
 Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2DCore qui sont sois beaucoup trop longue ou sois pas possible dans un CMakeLists.txt. <br />
 Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 
+## 📋 Libraries - Latest Release Artifacts :
+
+| Librarie | Version |
+|----------|---------|
+| **Onnx Runtime** | v1.22.1 |
+| **OpenSSL** | v3.5.1 |
+| **SDL3_shadercross** | commit_sha: 392d12afc1ef084c5cd656307180027399b7a54e |
+| **protobuf** | v31.1 |
+
 ## 📋 Plateforme supportés - ONNX Runtime :
 
 | Platform | Architectures | System Version | Compatible |
