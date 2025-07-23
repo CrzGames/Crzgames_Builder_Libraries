@@ -14,6 +14,8 @@ env:
   OPENSSL_APPLE_TAG: "3.3.3001"
   ONNXRUNTIME_TAG: "v1.22.1"
   SDL_SHADERCROSS_TAG: "392d12afc1ef084c5cd656307180027399b7a54e"
+  PROTOBUF_TAG: "v31.1"
+  ABSEIL_TAG: "20250512.1"
   ANDROID_NDK_VERSION: "27.2.12479018"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
@@ -104,6 +106,22 @@ jobs:
           repository: libsdl-org/SDL_shadercross
           ref: ${{ env.SDL_SHADERCROSS_TAG }}
           path: sdl_shadercross-src
+          submodules: recursive
+
+      - name: Checkout Abseil - All Platforms
+        uses: actions/checkout@v4
+        with:
+          repository: abseil/abseil-cpp
+          ref: ${{ env.ABSEIL_TAG }}
+          path: abseil-src
+          submodules: recursive
+
+      - name: Checkout Protobuf - All Platforms
+        uses: actions/checkout@v4
+        with:
+          repository: protocolbuffers/protobuf
+          ref: ${{ env.PROTOBUF_TAG }}
+          path: protobuf-src
           submodules: recursive
   
       - name: Setup Make (for OpenSSL / Python) - Linux (x64/arm64) / Android / SLR3 Sniper (x64/arm64)
@@ -258,6 +276,326 @@ jobs:
         with:
           packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
+
+      - name: Build Abseil - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+
+          set ROOTDIR=%CD%
+          mkdir %ROOTDIR%\abseil-artifact-windows\x64\include
+          mkdir %ROOTDIR%\abseil-artifact-windows\x64\lib
+
+          cd abseil-src
+          mkdir build && cd build
+          cmake -S .. -B . -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DABSL_BUILD_TESTING=OFF ^
+            -DABSL_PROPAGATE_CXX_STD=ON ^
+            -DCMAKE_CXX_STANDARD=17 ^
+            -DABSL_BUILD_SHARED=OFF ^
+            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\abseil-windows\x64"
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+
+          xcopy /E /Y "%ROOTDIR%\abseil-windows\x64\include" "%ROOTDIR%\abseil-artifact-windows\x64\include\"
+          copy "%ROOTDIR%\abseil-windows\x64\lib\*.lib" "%ROOTDIR%\abseil-artifact-windows\x64\lib\"
+
+      - name: Build Abseil - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+
+          set ROOTDIR=%CD%
+          mkdir %ROOTDIR%\abseil-artifact-windows\arm64\include
+          mkdir %ROOTDIR%\abseil-artifact-windows\arm64\lib
+
+          cd abseil-src
+          mkdir build && cd build
+          cmake -S .. -B . -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DABSL_BUILD_TESTING=OFF ^
+            -DABSL_PROPAGATE_CXX_STD=ON ^
+            -DCMAKE_CXX_STANDARD=17 ^
+            -DABSL_BUILD_SHARED=OFF ^
+            -CMAKE_INSTALL_PREFIX="%ROOTDIR%\abseil-windows\arm64"
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+
+          xcopy /E /Y "%ROOTDIR%\abseil-windows\arm64\include" "%ROOTDIR%\abseil-artifact-windows\arm64\include\"
+          copy "%ROOTDIR%\abseil-windows\arm64\lib\*.lib" "%ROOTDIR%\abseil-artifact-windows\arm64\lib\"
+
+      - name: Build Abseil - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          cd abseil-src
+          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include
+          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib
+          mkdir build && cd build
+          cmake -S .. -B . -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DABSL_BUILD_TESTING=OFF \
+            -DABSL_PROPAGATE_CXX_STD=ON \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DABSL_BUILD_SHARED=OFF \
+            -DCMAKE_INSTALL_PREFIX=$PWD/install
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+          cp -r install/include/* ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include/
+          cp install/lib/libabsl_*.a ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib/
+        shell: bash
+
+      - name: Build Abseil - Android (arm64-v8a / armeabi-v7a)
+        if: matrix.platform == 'android'
+        run: |
+          cd abseil-src
+          export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          export ANDROID_API=${{ env.ANDROID_API }}
+          export BUILD_DIR=$GITHUB_WORKSPACE/abseil-android-output
+          export FINAL_DIR=$GITHUB_WORKSPACE/abseil-android
+
+          mkdir -p "$BUILD_DIR"
+          mkdir -p "$FINAL_DIR"
+
+          build_abseil() {
+            local arch=$1
+            local abi=$2
+            local temp_dir=$BUILD_DIR/temp-$abi
+
+            echo "Building Abseil for $arch → $abi"
+            mkdir -p "$temp_dir" && cd "$temp_dir"
+            cmake -S $GITHUB_WORKSPACE/abseil-src -B . -GNinja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DABSL_BUILD_TESTING=OFF \
+              -DABSL_PROPAGATE_CXX_STD=ON \
+              -DCMAKE_CXX_STANDARD=17 \
+              -DABSL_BUILD_SHARED=OFF \
+              -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
+              -DANDROID_ABI=$abi \
+              -DANDROID_PLATFORM=android-$ANDROID_API \
+              -DCMAKE_INSTALL_PREFIX=$PWD/install
+            cmake --build . --config Release --parallel
+            cmake --install . --config Release
+            mkdir -p "$FINAL_DIR/$abi/include"
+            mkdir -p "$FINAL_DIR/$abi/lib"
+            cp -r install/include/* "$FINAL_DIR/$abi/include/"
+            cp install/lib/libabsl_*.a "$FINAL_DIR/$abi/lib/"
+            cd $GITHUB_WORKSPACE/abseil-src
+            rm -rf "$temp_dir"
+          }
+
+          build_abseil android-arm64 arm64-v8a
+          build_abseil android-arm armeabi-v7a
+        shell: bash
+
+      - name: Build Abseil - macOS (arm64)
+        if: matrix.platform == 'macos'
+        run: |
+          cd abseil-src
+          mkdir -p build-output/arm64/include
+          mkdir -p build-output/arm64/lib
+          mkdir build && cd build
+          cmake -S .. -B . -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DABSL_BUILD_TESTING=OFF \
+            -DABSL_PROPAGATE_CXX_STD=ON \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DABSL_BUILD_SHARED=OFF \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
+            -DCMAKE_INSTALL_PREFIX=$PWD/install
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+          cp -r install/include/* ../build-output/arm64/include/
+          cp install/lib/libabsl_*.a ../build-output/arm64/lib/
+        shell: bash
+
+      - name: Build Abseil - iOS (arm64)
+        if: matrix.platform == 'ios'
+        run: |
+          cd abseil-src
+          mkdir -p build-output/arm64/include
+          mkdir -p build-output/arm64/lib
+          mkdir build && cd build
+          cmake -S .. -B . -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DABSL_BUILD_TESTING=OFF \
+            -DABSL_PROPAGATE_CXX_STD=ON \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DABSL_BUILD_SHARED=OFF \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }} \
+            -DCMAKE_INSTALL_PREFIX=$PWD/install
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+          cp -r install/include/* ../build-output/arm64/include/
+          cp install/lib/libabsl_*.a ../build-output/arm64/lib/
+        shell: bash
+
+      - name: Build Protobuf - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+
+          set ROOTDIR=%CD%
+          mkdir %ROOTDIR%\protobuf-artifact-windows\x64\include
+          mkdir %ROOTDIR%\protobuf-artifact-windows\x64\lib
+
+          cd protobuf-src
+          mkdir build && cd build
+          cmake -S .. -B . -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -Dprotobuf_BUILD_SHARED_LIBS=OFF ^
+            -Dprotobuf_BUILD_TESTS=OFF ^
+            -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
+            -DCMAKE_CXX_STANDARD=17 ^
+            -DCMAKE_PREFIX_PATH="%ROOTDIR%\abseil-windows\x64" ^
+            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\protobuf-windows\x64"
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+
+          xcopy /E /Y "%ROOTDIR%\protobuf-windows\x64\include" "%ROOTDIR%\protobuf-artifact-windows\x64\include\"
+          copy "%ROOTDIR%\protobuf-windows\x64\lib\libprotobuf.lib" "%ROOTDIR%\protobuf-artifact-windows\x64\lib\"
+
+      - name: Build Protobuf - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+
+          set ROOTDIR=%CD%
+          mkdir %ROOTDIR%\protobuf-artifact-windows\arm64\include
+          mkdir %ROOTDIR%\protobuf-artifact-windows\arm64\lib
+
+          cd protobuf-src
+          mkdir build && cd build
+          cmake -S .. -B . -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -Dprotobuf_BUILD_SHARED_LIBS=OFF ^
+            -Dprotobuf_BUILD_TESTS=OFF ^
+            -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
+            -DCMAKE_CXX_STANDARD=17 ^
+            -DCMAKE_PREFIX_PATH="%ROOTDIR%\abseil-windows\arm64" ^
+            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\protobuf-windows\arm64"
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+
+          xcopy /E /Y "%ROOTDIR%\protobuf-windows\arm64\include" "%ROOTDIR%\protobuf-artifact-windows\arm64\include\"
+          copy "%ROOTDIR%\protobuf-windows\arm64\lib\libprotobuf.lib" "%ROOTDIR%\protobuf-artifact-windows\arm64\lib\"
+
+      - name: Build Protobuf - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        run: |
+          cd protobuf-src
+          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include
+          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib
+          mkdir build && cd build
+          cmake -S .. -B . -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
+            -Dprotobuf_BUILD_TESTS=OFF \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }} \
+            -DCMAKE_INSTALL_PREFIX=$PWD/install
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+          cp -r install/include/* ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include/
+          cp install/lib/libprotobuf.a ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib/
+        shell: bash
+
+      - name: Build Protobuf - Android (arm64-v8a / armeabi-v7a)
+        if: matrix.platform == 'android'
+        run: |
+          cd protobuf-src
+          export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          export ANDROID_API=${{ env.ANDROID_API }}
+          export BUILD_DIR=$GITHUB_WORKSPACE/protobuf-android-output
+          export FINAL_DIR=$GITHUB_WORKSPACE/protobuf-android
+
+          mkdir -p "$BUILD_DIR"
+          mkdir -p "$FINAL_DIR"
+
+          build_protobuf() {
+            local arch=$1
+            local abi=$2
+            local temp_dir=$BUILD_DIR/temp-$abi
+
+            echo "Building Protobuf for $arch → $abi"
+            mkdir -p "$temp_dir" && cd "$temp_dir"
+            cmake -S $GITHUB_WORKSPACE/protobuf-src -B . -GNinja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -Dprotobuf_BUILD_SHARED_LIBS=OFF \
+              -Dprotobuf_BUILD_TESTS=OFF \
+              -DCMAKE_CXX_STANDARD=17 \
+              -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-android/$abi \
+              -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
+              -DANDROID_ABI=$abi \
+              -DANDROID_PLATFORM=android-$ANDROID_API \
+              -DCMAKE_INSTALL_PREFIX=$PWD/install
+            cmake --build . --config Release --parallel
+            cmake --install . --config Release
+            mkdir -p "$FINAL_DIR/$abi/include"
+            mkdir -p "$FINAL_DIR/$abi/lib"
+            cp -r install/include/* "$FINAL_DIR/$abi/include/"
+            cp install/lib/libprotobuf.a "$FINAL_DIR/$abi/lib/"
+            cd $GITHUB_WORKSPACE/protobuf-src
+            rm -rf "$temp_dir"
+          }
+
+          build_protobuf android-arm64 arm64-v8a
+          build_protobuf android-arm armeabi-v7a
+        shell: bash
+
+      - name: Build Protobuf - macOS (arm64)
+        if: matrix.platform == 'macos'
+        run: |
+          cd protobuf-src
+          mkdir -p build-output/arm64/include
+          mkdir -p build-output/arm64/lib
+          mkdir build && cd build
+          cmake -S .. -B . -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
+            -Dprotobuf_BUILD_TESTS=OFF \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/arm64 \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
+            -DCMAKE_INSTALL_PREFIX=$PWD/install
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+          cp -r install/include/* ../build-output/arm64/include/
+          cp install/lib/libprotobuf.a ../build-output/arm64/lib/
+        shell: bash
+
+      - name: Build Protobuf - iOS (arm64)
+        if: matrix.platform == 'ios'
+        run: |
+          cd protobuf-src
+          mkdir -p build-output/arm64/include
+          mkdir -p build-output/arm64/lib
+          mkdir build && cd build
+          cmake -S .. -B . -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
+            -Dprotobuf_BUILD_TESTS=OFF \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/arm64 \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -CMAKE_OSX_SYSROOT=iphoneos \
+            -CMAKE_OSX_ARCHITECTURES=arm64 \
+            -CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }} \
+            -CMAKE_INSTALL_PREFIX=$PWD/install
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+          cp -r install/include/* ../build-output/arm64/include/
+          cp install/lib/libprotobuf.a ../build-output/arm64/lib/
+        shell: bash
 
       - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-arm64' }}
@@ -884,6 +1222,69 @@ jobs:
           name: sdl3_shadercross-${{ matrix.platform }}
           path: sdl_shadercross-src/prefix
 
+      - name: Upload Protobuf Artifacts - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-windows-x64
+          path: protobuf-artifact-windows/x64
+
+      - name: Upload Protobuf Artifacts - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-windows-arm64
+          path: protobuf-artifact-windows/arm64
+
+      - name: Upload Protobuf Artifacts - Linux (x64)
+        if: matrix.platform == 'linux-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-linux-x64
+          path: protobuf-src/build-output/x86_64
+
+      - name: Upload Protobuf Artifacts - Linux (arm64)
+        if: matrix.platform == 'linux-arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-linux-arm64
+          path: protobuf-src/build-output/arm64
+
+      - name: Upload Protobuf Artifacts - SLR3 Sniper (x64)
+        if: matrix.platform == 'slr3-sniper-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-slr3-sniper-x64
+          path: protobuf-src/build-output/x86_64
+
+      - name: Upload Protobuf Artifacts - SLR3 Sniper (arm64)
+        if: matrix.platform == 'slr3-sniper-arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-slr3-sniper-arm64
+          path: protobuf-src/build-output/arm64
+
+      - name: Upload Protobuf Artifacts - Android (arm64-v8a / armeabi-v7a)
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-android-arm64v8a_armeabiv7a
+          path: protobuf-android/
+
+      - name: Upload Protobuf Artifacts - macOS (arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-macos-arm64
+          path: protobuf-src/build-output/arm64
+
+      - name: Upload Protobuf Artifacts - iOS (arm64)
+        if: matrix.platform == 'ios'
+        uses: actions/upload-artifact@v4
+        with:
+          name: protobuf-ios-arm64
+          path: protobuf-src/build-output/arm64
+
   combine-artifacts:
     name: Combine artifacts
     needs: build-libs
@@ -966,6 +1367,82 @@ jobs:
           cp -a temp/onnxruntime-ios/include/* merged2/ios/include/
           cp -a temp/onnxruntime-ios/lib/* merged2/ios/lib/
 
+          # ------- Protobuf ---------
+          # Linux (x64 / arm64)
+          mkdir -p merged3/linux/include merged3/linux/lib/x64 merged3/linux/lib/arm64
+          cp -a temp/protobuf-linux-x64/include/* merged3/linux/include/
+          cp -a temp/protobuf-linux-x64/lib/* merged3/linux/lib/x64/
+          cp -a temp/protobuf-linux-arm64/include/* merged3/linux/include/
+          cp -a temp/protobuf-linux-arm64/lib/* merged3/linux/lib/arm64/
+
+          # Windows (x64 / arm64)
+          mkdir -p merged3/windows/include merged3/windows/lib/x64 merged3/windows/lib/arm64
+          cp -a temp/protobuf-windows-x64/include/* merged3/windows/include/
+          cp -a temp/protobuf-windows-x64/lib/* merged3/windows/lib/x64/
+          cp -a temp/protobuf-windows-arm64/include/* merged3/windows/include/
+          cp -a temp/protobuf-windows-arm64/lib/* merged3/windows/lib/arm64/
+
+          # Android (arm64-v8a / armeabi-v7a)
+          mkdir -p merged3/android/include merged3/android/lib/arm64-v8a merged3/android/lib/armeabi-v7a
+          cp -a temp/protobuf-android-arm64v8a_armeabiv7a/arm64-v8a/include/* merged3/android/include/
+          cp -a temp/protobuf-android-arm64v8a_armeabiv7a/arm64-v8a/lib/* merged3/android/lib/arm64-v8a/
+          cp -a temp/protobuf-android-arm64v8a_armeabiv7a/armeabi-v7a/lib/* merged3/android/lib/armeabi-v7a/
+
+          # SLR3 Sniper (x64 / arm64)
+          mkdir -p merged3/slr3-sniper/include merged3/slr3-sniper/lib/x64 merged3/slr3-sniper/lib/arm64
+          cp -a temp/protobuf-slr3-sniper-x64/include/* merged3/slr3-sniper/include/
+          cp -a temp/protobuf-slr3-sniper-x64/lib/* merged3/slr3-sniper/lib/x64/
+          cp -a temp/protobuf-slr3-sniper-arm64/include/* merged3/slr3-sniper/include/
+          cp -a temp/protobuf-slr3-sniper-arm64/lib/* merged3/slr3-sniper/lib/arm64/
+
+          # macOS (arm64)
+          mkdir -p merged3/macos/include merged3/macos/lib
+          cp -a temp/protobuf-macos-arm64/include/* merged3/macos/include/
+          cp -a temp/protobuf-macos-arm64/lib/* merged3/macos/lib/
+
+          # iOS (arm64)
+          mkdir -p merged3/ios/include merged3/ios/lib
+          cp -a temp/protobuf-ios-arm64/include/* merged3/ios/include/
+          cp -a temp/protobuf-ios-arm64/lib/* merged3/ios/lib/
+
+          # ------- SDL3_shadercross ---------
+          # Linux (x64 / arm64)
+          mkdir -p merged4/linux/include merged4/linux/lib/x64 merged4/linux/lib/arm64
+          cp -a temp/sdl3_shadercross-linux-x64/include/* merged4/linux/include/
+          cp -a temp/sdl3_shadercross-linux-x64/lib/* merged4/linux/lib/x64/
+          cp -a temp/sdl3_shadercross-linux-arm64/include/* merged4/linux/include/
+          cp -a temp/sdl3_shadercross-linux-arm64/lib/* merged4/linux/lib/arm64/
+
+          # Windows (x64 / arm64)
+          mkdir -p merged4/windows/include merged4/windows/lib/x64 merged4/windows/lib/arm64
+          cp -a temp/sdl3_shadercross-windows-x64/include/* merged4/windows/include/
+          cp -a temp/sdl3_shadercross-windows-x64/lib/* merged4/windows/lib/x64/
+          cp -a temp/sdl3_shadercross-windows-arm64/include/* merged4/windows/include/
+          cp -a temp/sdl3_shadercross-windows-arm64/lib/* merged4/windows/lib/arm64/
+
+          # Android (arm64-v8a / armeabi-v7a)
+          mkdir -p merged4/android/include merged4/android/lib/arm64-v8a merged4/android/lib/armeabi-v7a
+          cp -a temp/sdl3_shadercross-android-arm64v8a_armeabiv7a/arm64-v8a/include/* merged4/android/include/
+          cp -a temp/sdl3_shadercross-android-arm64v8a_armeabiv7a/arm64-v8a/lib/* merged4/android/lib/arm64-v8a/
+          cp -a temp/sdl3_shadercross-android-arm64v8a_armeabiv7a/armeabi-v7a/lib/* merged4/android/lib/armeabi-v7a/
+
+          # SLR3 Sniper (x64 / arm64)
+          mkdir -p merged4/slr3-sniper/include merged4/slr3-sniper/lib/x64 merged4/slr3-sniper/lib/arm64
+          cp -a temp/sdl3_shadercross-slr3-sniper-x64/include/* merged4/slr3-sniper/include/
+          cp -a temp/sdl3_shadercross-slr3-sniper-x64/lib/* merged4/slr3-sniper/lib/x64/
+          cp -a temp/sdl3_shadercross-slr3-sniper-arm64/include/* merged4/slr3-sniper/include/
+          cp -a temp/sdl3_shadercross-slr3-sniper-arm64/lib/* merged4/slr3-sniper/lib/arm64/
+
+          # macOS (arm64)
+          mkdir -p merged4/macos/include merged4/macos/lib/arm64
+          cp -a temp/sdl3_shadercross-macos-arm64/include/* merged4/macos/include/
+          cp -a temp/sdl3_shadercross-macos-arm64/lib/* merged4/macos/lib/arm64/
+
+          # iOS (arm64)
+          mkdir -p merged4/ios/include merged4/ios/lib/arm64
+          cp -a temp/sdl3_shadercross-ios-arm64/include/* merged4/ios/include/
+          cp -a temp/sdl3_shadercross-ios-arm64/lib/* merged4/ios/lib/arm64/
+          
       - name: Zip merged folders
         run: |
           cd merged
@@ -980,22 +1457,39 @@ jobs:
           zip -r ../onnxruntime-slr3-sniper.zip slr3-sniper/*
           zip -r ../onnxruntime-macos.zip macos/*
           zip -r ../onnxruntime-ios.zip ios/*
+          cd ../merged3
+          zip -r ../protobuf-linux.zip linux/*
+          zip -r ../protobuf-windows.zip windows/*
+          zip -r ../protobuf-android.zip android/*
+          zip -r ../protobuf-slr3-sniper.zip slr3-sniper/*
+          zip -r ../protobuf-macos.zip macos/*
+          zip -r ../protobuf-ios.zip ios/*
+          cd ../merged4
+          zip -r ../sdl_shadercross-linux.zip linux/*
+          zip -r ../sdl_shadercross-windows.zip windows/*
+          zip -r ../sdl_shadercross-android.zip android/*
+          zip -r ../sdl_shadercross-slr3-sniper.zip slr3-sniper/*
+          zip -r ../sdl_shadercross-macos.zip macos/*
+          zip -r ../sdl_shadercross-ios.zip ios/*
 
       - name: Generate release notes
         run: |
           OPENSSL_TAG="${{ env.OPENSSL_TAG }}"
-          ONNX_TAG="${{ env.ONNXRUNTIME_TAG }}"
+          ONNXRUNTIME_TAG="${{ env.ONNXRUNTIME_TAG }}"
           SDL_SHADERCROSS_TAG="${{ env.SDL_SHADERCROSS_TAG }}"
+          PROTOBUF_TAG="${{ env.PROTOBUF_TAG }}"
       
           OPENSSL_VERSION="${OPENSSL_TAG#openssl-}"
-          ONNX_VERSION="${ONNX_TAG#v}"
+          ONNX_VERSION="${ONNXRUNTIME_TAG#v}"
           SDL_SHADERCROSS_VERSION="${SDL_SHADERCROSS_TAG}"
-      
+          PROTOBUF_VERSION="${PROTOBUF_TAG#v}"
+
           echo "## Build Dependencies Versions" > release_notes.md
           echo "" >> release_notes.md
           echo "- OpenSSL: $OPENSSL_VERSION" >> release_notes.md
           echo "- ONNX Runtime: $ONNX_VERSION" >> release_notes.md
           echo "- SDL3_shadercross: $SDL_SHADERCROSS_VERSION" >> release_notes.md
+          echo "- Protobuf: $PROTOBUF_VERSION" >> release_notes.md
 
       - name: Deploy assets to GitHub Releases
         uses: softprops/action-gh-release@v2
@@ -1011,5 +1505,17 @@ jobs:
             onnxruntime-slr3-sniper.zip
             onnxruntime-macos.zip
             onnxruntime-ios.zip
+            sdl_shadercross-linux.zip
+            sdl_shadercross-windows.zip
+            sdl_shadercross-android.zip
+            sdl_shadercross-slr3-sniper.zip
+            sdl_shadercross-macos.zip
+            sdl_shadercross-ios.zip
+            protobuf-linux.zip
+            protobuf-windows.zip
+            protobuf-android.zip
+            protobuf-slr3-sniper.zip
+            protobuf-macos.zip
+            protobuf-ios.zip
           body_path: release_notes.md
           #token:
