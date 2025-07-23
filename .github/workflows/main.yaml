@@ -637,7 +637,6 @@ jobs:
 
           xcopy /E /Y "%ROOTDIR%\gamenetworkingsockets-windows\x64\include" "%ROOTDIR%\gamenetworkingsockets-artifact-windows\x64\include\"
           copy "%ROOTDIR%\gamenetworkingsockets-windows\x64\lib\GameNetworkingSockets.lib" "%ROOTDIR%\gamenetworkingsockets-artifact-windows\x64\lib\"
-        shell: cmd
 
       - name: Build GameNetworkingSockets - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
@@ -671,7 +670,6 @@ jobs:
 
           xcopy /E /Y "%ROOTDIR%\gamenetworkingsockets-windows\arm64\include" "%ROOTDIR%\gamenetworkingsockets-artifact-windows\arm64\include\"
           copy "%ROOTDIR%\gamenetworkingsockets-windows\arm64\lib\GameNetworkingSockets.lib" "%ROOTDIR%\gamenetworkingsockets-artifact-windows\arm64\lib\"
-        shell: cmd
 
       - name: Build GameNetworkingSockets - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
