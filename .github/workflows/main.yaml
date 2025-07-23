@@ -16,6 +16,7 @@ env:
   SDL_SHADERCROSS_TAG: "392d12afc1ef084c5cd656307180027399b7a54e"
   PROTOBUF_TAG: "v31.1"
   ABSEIL_TAG: "20250512.1"
+  VALVE_GAME_NETWORKING_SOCKETS_TAG: "742f75bdfdb78c0971923c8c6ae2fad3a1a7758f"
   ANDROID_NDK_VERSION: "27.2.12479018"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
@@ -128,7 +129,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: CrzGames/Crzgames_ValveGameNetworkingSockets
-          ref: 742f75bdfdb78c0971923c8c6ae2fad3a1a7758f
+          ref: ${{ env.VALVE_GAME_NETWORKING_SOCKETS_TAG }}
           path: gamenetworkingsockets-src
           submodules: recursive
       
