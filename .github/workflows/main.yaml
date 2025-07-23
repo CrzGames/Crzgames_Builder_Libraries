@@ -454,6 +454,7 @@ jobs:
           set ROOTDIR=%CD%
           mkdir %ROOTDIR%\protobuf-artifact-windows\x64\include
           mkdir %ROOTDIR%\protobuf-artifact-windows\x64\lib
+          mkdir %ROOTDIR%\protobuf-artifact-windows\x64\bin
 
           cd protobuf-src
           mkdir build && cd build
@@ -461,15 +462,21 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release ^
             -Dprotobuf_BUILD_SHARED_LIBS=OFF ^
             -Dprotobuf_BUILD_TESTS=OFF ^
+            -Dprotobuf_BUILD_PROTOC=ON ^
             -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
+            -Dprotobuf_LOCAL_DEPENDENCIES_ONLY=ON ^
             -DCMAKE_CXX_STANDARD=17 ^
             -DCMAKE_PREFIX_PATH="%ROOTDIR%\abseil-windows\x64" ^
             -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\protobuf-windows\x64"
+          if errorlevel 1 exit 1
           cmake --build . --config Release --parallel
+          if errorlevel 1 exit 1
           cmake --install . --config Release
+          if errorlevel 1 exit 1
 
           xcopy /E /Y "%ROOTDIR%\protobuf-windows\x64\include" "%ROOTDIR%\protobuf-artifact-windows\x64\include\"
           copy "%ROOTDIR%\protobuf-windows\x64\lib\libprotobuf.lib" "%ROOTDIR%\protobuf-artifact-windows\x64\lib\"
+          copy "%ROOTDIR%\protobuf-windows\x64\bin\protoc.exe" "%ROOTDIR%\protobuf-artifact-windows\x64\bin\"
 
       - name: Build Protobuf - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
@@ -480,6 +487,7 @@ jobs:
           set ROOTDIR=%CD%
           mkdir %ROOTDIR%\protobuf-artifact-windows\arm64\include
           mkdir %ROOTDIR%\protobuf-artifact-windows\arm64\lib
+          mkdir %ROOTDIR%\protobuf-artifact-windows\arm64\bin
 
           cd protobuf-src
           mkdir build && cd build
@@ -487,15 +495,21 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release ^
             -Dprotobuf_BUILD_SHARED_LIBS=OFF ^
             -Dprotobuf_BUILD_TESTS=OFF ^
+            -Dprotobuf_BUILD_PROTOC=ON ^
             -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
+            -Dprotobuf_LOCAL_DEPENDENCIES_ONLY=ON ^
             -DCMAKE_CXX_STANDARD=17 ^
             -DCMAKE_PREFIX_PATH="%ROOTDIR%\abseil-windows\arm64" ^
             -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\protobuf-windows\arm64"
+          if errorlevel 1 exit 1
           cmake --build . --config Release --parallel
+          if errorlevel 1 exit 1
           cmake --install . --config Release
+          if errorlevel 1 exit 1
 
           xcopy /E /Y "%ROOTDIR%\protobuf-windows\arm64\include" "%ROOTDIR%\protobuf-artifact-windows\arm64\include\"
           copy "%ROOTDIR%\protobuf-windows\arm64\lib\libprotobuf.lib" "%ROOTDIR%\protobuf-artifact-windows\arm64\lib\"
+          copy "%ROOTDIR%\protobuf-windows\arm64\bin\protoc.exe" "%ROOTDIR%\protobuf-artifact-windows\arm64\bin\"
 
       - name: Build Protobuf - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
@@ -503,18 +517,22 @@ jobs:
           cd protobuf-src
           mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include
           mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib
+          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/bin
           mkdir build && cd build
           cmake -S .. -B . -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -Dprotobuf_BUILD_SHARED_LIBS=OFF \
             -Dprotobuf_BUILD_TESTS=OFF \
+            -Dprotobuf_BUILD_PROTOC=ON \
+            -Dprotobuf_LOCAL_DEPENDENCIES_ONLY=ON \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }} \
             -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-          cp -r install/include/* ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include/
-          cp install/lib/libprotobuf.a ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib/
+          cmake --build . --config Release --parallel || exit 1
+          cmake --install . --config Release || exit 1
+          cp -r install/include/* ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include/ || exit 1
+          cp install/lib/libprotobuf.a ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib/ || exit 1
+          cp install/bin/protoc ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/bin/ || exit 1
         shell: bash
 
       - name: Build Protobuf - Android (arm64-v8a / armeabi-v7a)
@@ -540,18 +558,22 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release \
               -Dprotobuf_BUILD_SHARED_LIBS=OFF \
               -Dprotobuf_BUILD_TESTS=OFF \
+              -Dprotobuf_BUILD_PROTOC=ON \
+              -Dprotobuf_LOCAL_DEPENDENCIES_ONLY=ON \
               -DCMAKE_CXX_STANDARD=17 \
               -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-android/$abi \
               -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
               -DANDROID_ABI=$abi \
               -DANDROID_PLATFORM=android-$ANDROID_API \
               -DCMAKE_INSTALL_PREFIX=$PWD/install
-            cmake --build . --config Release --parallel
-            cmake --install . --config Release
+            cmake --build . --config Release --parallel || exit 1
+            cmake --install . --config Release || exit 1
             mkdir -p "$FINAL_DIR/$abi/include"
             mkdir -p "$FINAL_DIR/$abi/lib"
-            cp -r install/include/* "$FINAL_DIR/$abi/include/"
-            cp install/lib/libprotobuf.a "$FINAL_DIR/$abi/lib/"
+            mkdir -p "$FINAL_DIR/$abi/bin"
+            cp -r install/include/* "$FINAL_DIR/$abi/include/" || exit 1
+            cp install/lib/libprotobuf.a "$FINAL_DIR/$abi/lib/" || exit 1
+            cp install/bin/protoc "$FINAL_DIR/$abi/bin/" || exit 1
             cd $GITHUB_WORKSPACE/protobuf-src
             rm -rf "$temp_dir"
           }
@@ -566,20 +588,24 @@ jobs:
           cd protobuf-src
           mkdir -p build-output/arm64/include
           mkdir -p build-output/arm64/lib
+          mkdir -p build-output/arm64/bin
           mkdir build && cd build
           cmake -S .. -B . -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -Dprotobuf_BUILD_SHARED_LIBS=OFF \
             -Dprotobuf_BUILD_TESTS=OFF \
+            -Dprotobuf_BUILD_PROTOC=ON \
+            -Dprotobuf_LOCAL_DEPENDENCIES_ONLY=ON \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/arm64 \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
             -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-          cp -r install/include/* ../build-output/arm64/include/
-          cp install/lib/libprotobuf.a ../build-output/arm64/lib/
+          cmake --build . --config Release --parallel || exit 1
+          cmake --install . --config Release || exit 1
+          cp -r install/include/* ../build-output/arm64/include/ || exit 1
+          cp install/lib/libprotobuf.a ../build-output/arm64/lib/ || exit 1
+          cp install/bin/protoc ../build-output/arm64/bin/ || exit 1
         shell: bash
 
       - name: Build Protobuf - iOS (arm64)
@@ -588,11 +614,14 @@ jobs:
           cd protobuf-src
           mkdir -p build-output/arm64/include
           mkdir -p build-output/arm64/lib
+          mkdir -p build-output/arm64/bin
           mkdir build && cd build
           cmake -S .. -B . -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -Dprotobuf_BUILD_SHARED_LIBS=OFF \
             -Dprotobuf_BUILD_TESTS=OFF \
+            -Dprotobuf_BUILD_PROTOC=ON \
+            -Dprotobuf_LOCAL_DEPENDENCIES_ONLY=ON \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/arm64 \
             -DCMAKE_SYSTEM_NAME=iOS \
@@ -600,10 +629,11 @@ jobs:
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }} \
             -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-          cp -r install/include/* ../build-output/arm64/include/
-          cp install/lib/libprotobuf.a ../build-output/arm64/lib/
+          cmake --build . --config Release --parallel || exit 1
+          cmake --install . --config Release || exit 1
+          cp -r install/include/* ../build-output/arm64/include/ || exit 1
+          cp install/lib/libprotobuf.a ../build-output/arm64/lib/ || exit 1
+          cp install/bin/protoc ../build-output/arm64/bin/ || exit 1
         shell: bash
 
       - name: Build GameNetworkingSockets - Windows (x64)
@@ -627,6 +657,7 @@ jobs:
             -DUSE_STEAMWEBRTC=OFF ^
             -DOPENSSL_NO_ENGINE=ON ^
             -DCMAKE_CXX_STANDARD=17 ^
+            -DProtobuf_PROTOC_EXECUTABLE="%ROOTDIR%\protobuf-windows\x64\bin\protoc.exe" ^
             -DCMAKE_PREFIX_PATH="%ROOTDIR%\openssl-windows\x64;%ROOTDIR%\protobuf-windows\x64" ^
             -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\gamenetworkingsockets-windows\x64"
           if errorlevel 1 exit 1
@@ -659,6 +690,7 @@ jobs:
             -DUSE_STEAMWEBRTC=OFF ^
             -DOPENSSL_NO_ENGINE=ON ^
             -DCMAKE_CXX_STANDARD=17 ^
+            -DProtobuf_PROTOC_EXECUTABLE="%ROOTDIR%\protobuf-windows\arm64\bin\protoc.exe" ^
             -DCMAKE_SYSTEM_PROCESSOR=ARM64 ^
             -DCMAKE_PREFIX_PATH="%ROOTDIR%\openssl-windows\arm64;%ROOTDIR%\protobuf-windows\arm64" ^
             -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\gamenetworkingsockets-windows\arm64"
@@ -687,6 +719,7 @@ jobs:
             -DUSE_STEAMWEBRTC=OFF \
             -DOPENSSL_NO_ENGINE=ON \
             -DCMAKE_CXX_STANDARD=17 \
+            -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/bin/protoc \
             -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }};$GITHUB_WORKSPACE/protobuf-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}" \
             -DCMAKE_INSTALL_PREFIX=$PWD/install
           cmake --build . --config Release --parallel || exit 1
@@ -723,6 +756,7 @@ jobs:
               -DUSE_STEAMWEBRTC=OFF \
               -DOPENSSL_NO_ENGINE=ON \
               -DCMAKE_CXX_STANDARD=17 \
+              -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-android/$abi/bin/protoc \
               -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-android/$abi;$GITHUB_WORKSPACE/protobuf-android/$abi" \
               -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
               -DANDROID_ABI=$abi \
@@ -758,6 +792,7 @@ jobs:
             -DUSE_STEAMWEBRTC=OFF \
             -DOPENSSL_NO_ENGINE=ON \
             -DCMAKE_CXX_STANDARD=17 \
+            -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/arm64/bin/protoc \
             -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-macos;$GITHUB_WORKSPACE/protobuf-src/build-output/arm64" \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
@@ -784,6 +819,7 @@ jobs:
             -DUSE_STEAMWEBRTC=OFF \
             -DOPENSSL_NO_ENGINE=ON \
             -DCMAKE_CXX_STANDARD=17 \
+            -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/arm64/bin/protoc \
             -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-ios;$GITHUB_WORKSPACE/protobuf-src/build-output/arm64" \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
