@@ -18,7 +18,6 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 | **protobuf** | v31.1 |
 | **Crzgames_ValveGameNetworkingSockets** | commit_sha: 725e273c7442bac7a8bc903c0b210b1c15c34d92 (+PR for fixed bugs) |
 
-Crzgames_ValveGameNetworkingSockets
 <br />
 
 ---
