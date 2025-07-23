@@ -1,4 +1,4 @@
-name: Build ONNX Runtime, OpenSSL and SDL3_shadercross
+name: Build ONNX Runtime, OpenSSL, SDL3_shadercross and protobuf Libraries
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 env:
-  CMAKE_OSX_DEPLOYMENT_TARGET: "15.0"
-  IOS_DEPLOYMENT_TARGET: "18.0"
+  CMAKE_OSX_DEPLOYMENT_TARGET: "15.5"
+  IOS_DEPLOYMENT_TARGET: "18.5"
   ANDROID_API: "28"
   OPENSSL_TAG: "openssl-3.5.1"
   OPENSSL_APPLE_TAG: "3.3.3001"
@@ -320,7 +320,7 @@ jobs:
             -DABSL_PROPAGATE_CXX_STD=ON ^
             -DCMAKE_CXX_STANDARD=17 ^
             -DABSL_BUILD_SHARED=OFF ^
-            -CMAKE_INSTALL_PREFIX="%ROOTDIR%\abseil-windows\arm64"
+            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\abseil-windows\arm64"
           cmake --build . --config Release --parallel
           cmake --install . --config Release
 
@@ -587,10 +587,10 @@ jobs:
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/arm64 \
             -DCMAKE_SYSTEM_NAME=iOS \
-            -CMAKE_OSX_SYSROOT=iphoneos \
-            -CMAKE_OSX_ARCHITECTURES=arm64 \
-            -CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }} \
-            -CMAKE_INSTALL_PREFIX=$PWD/install
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }} \
+            -DCMAKE_INSTALL_PREFIX=$PWD/install
           cmake --build . --config Release --parallel
           cmake --install . --config Release
           cp -r install/include/* ../build-output/arm64/include/
