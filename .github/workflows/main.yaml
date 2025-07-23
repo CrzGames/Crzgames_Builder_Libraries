@@ -647,10 +647,11 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF ^
             -DBUILD_TESTS=OFF ^
             -DBUILD_EXAMPLES=OFF ^
-            -DUSE_OPENSSL=ON ^
+            -DENABLE_ICE=OFF ^
             -DUSE_STEAMWEBRTC=OFF ^
             -DOPENSSL_NO_ENGINE=ON ^
             -DCMAKE_CXX_STANDARD=17 ^
+            -DCMAKE_SYSTEM_NAME=Windows ^
             -DProtobuf_PROTOC_EXECUTABLE="%ROOTDIR%\protobuf-windows\x64\bin\protoc.exe" ^
             -DCMAKE_PREFIX_PATH="%ROOTDIR%\openssl-windows\x64;%ROOTDIR%\protobuf-windows\x64" ^
             -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\gamenetworkingsockets-windows\x64"
@@ -680,10 +681,10 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF ^
             -DBUILD_TESTS=OFF ^
             -DBUILD_EXAMPLES=OFF ^
-            -DUSE_OPENSSL=ON ^
+            -DENABLE_ICE=OFF ^
             -DUSE_STEAMWEBRTC=OFF ^
-            -DOPENSSL_NO_ENGINE=ON ^
             -DCMAKE_CXX_STANDARD=17 ^
+            -DCMAKE_SYSTEM_NAME=Windows ^
             -DProtobuf_PROTOC_EXECUTABLE="%ROOTDIR%\protobuf-windows\arm64\bin\protoc.exe" ^
             -DCMAKE_SYSTEM_PROCESSOR=ARM64 ^
             -DCMAKE_PREFIX_PATH="%ROOTDIR%\openssl-windows\arm64;%ROOTDIR%\protobuf-windows\arm64" ^
@@ -709,10 +710,10 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTS=OFF \
             -DBUILD_EXAMPLES=OFF \
-            -DUSE_OPENSSL=ON \
+            -DENABLE_ICE=OFF \
             -DUSE_STEAMWEBRTC=OFF \
-            -DOPENSSL_NO_ENGINE=ON \
             -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_SYSTEM_NAME=Linux \
             -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/bin/protoc \
             -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }};$GITHUB_WORKSPACE/protobuf-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}" \
             -DCMAKE_INSTALL_PREFIX=$PWD/install
@@ -746,10 +747,10 @@ jobs:
               -DBUILD_SHARED_LIBS=OFF \
               -DBUILD_TESTS=OFF \
               -DBUILD_EXAMPLES=OFF \
-              -DUSE_OPENSSL=ON \
+              -DENABLE_ICE=OFF \
               -DUSE_STEAMWEBRTC=OFF \
-              -DOPENSSL_NO_ENGINE=ON \
               -DCMAKE_CXX_STANDARD=17 \
+              -DCMAKE_SYSTEM_NAME=Android \
               -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-android/$abi/bin/protoc \
               -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-android/$abi;$GITHUB_WORKSPACE/protobuf-android/$abi" \
               -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
@@ -782,10 +783,10 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTS=OFF \
             -DBUILD_EXAMPLES=OFF \
-            -DUSE_OPENSSL=ON \
+            -DENABLE_ICE=OFF \
             -DUSE_STEAMWEBRTC=OFF \
-            -DOPENSSL_NO_ENGINE=ON \
             -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_SYSTEM_NAME=Darwin \
             -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/arm64/bin/protoc \
             -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-macos;$GITHUB_WORKSPACE/protobuf-src/build-output/arm64" \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
@@ -809,10 +810,10 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTS=OFF \
             -DBUILD_EXAMPLES=OFF \
-            -DUSE_OPENSSL=ON \
+            -DENABLE_ICE=OFF \
             -DUSE_STEAMWEBRTC=OFF \
-            -DOPENSSL_NO_ENGINE=ON \
             -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_SYSTEM_NAME=Darwin \
             -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/arm64/bin/protoc \
             -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-ios;$GITHUB_WORKSPACE/protobuf-src/build-output/arm64" \
             -DCMAKE_SYSTEM_NAME=iOS \
