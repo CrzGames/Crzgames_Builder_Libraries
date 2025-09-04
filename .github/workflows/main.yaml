@@ -10,14 +10,11 @@ env:
   CMAKE_OSX_DEPLOYMENT_TARGET: "15.5"
   IOS_DEPLOYMENT_TARGET: "18.5"
   ANDROID_API: "28"
-  OPENSSL_TAG: "openssl-3.5.1"
+  OPENSSL_TAG: "openssl-3.5.2"
   OPENSSL_APPLE_TAG: "3.3.3001"
-  ONNXRUNTIME_TAG: "v1.22.1"
-  SDL_SHADERCROSS_TAG: "392d12afc1ef084c5cd656307180027399b7a54e"
-  PROTOBUF_TAG: "v31.1"
-  ABSEIL_TAG: "20250512.1"
-  VALVE_GAME_NETWORKING_SOCKETS_TAG: "742f75bdfdb78c0971923c8c6ae2fad3a1a7758f"
-  ANDROID_NDK_VERSION: "27.2.12479018"
+  ONNXRUNTIME_TAG: "v1.22.2"
+  SDL_SHADERCROSS_TAG: "4ce748310f57d405b4eb2a79fbbc7e974d6491ec"
+  ANDROID_NDK_VERSION: "28.2.13676358"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
   XCODE_VERSION: "16.4.0"
@@ -107,30 +104,6 @@ jobs:
           repository: libsdl-org/SDL_shadercross
           ref: ${{ env.SDL_SHADERCROSS_TAG }}
           path: sdl_shadercross-src
-          submodules: recursive
-
-      - name: Checkout Abseil - All Platforms
-        uses: actions/checkout@v4
-        with:
-          repository: abseil/abseil-cpp
-          ref: ${{ env.ABSEIL_TAG }}
-          path: abseil-src
-          submodules: recursive
-
-      - name: Checkout Protobuf - All Platforms
-        uses: actions/checkout@v4
-        with:
-          repository: protocolbuffers/protobuf
-          ref: ${{ env.PROTOBUF_TAG }}
-          path: protobuf-src
-          submodules: recursive
-
-      - name: Checkout GameNetworkingSockets - All Platforms
-        uses: actions/checkout@v4
-        with:
-          repository: CrzGames/Crzgames_ValveGameNetworkingSockets
-          ref: ${{ env.VALVE_GAME_NETWORKING_SOCKETS_TAG }}
-          path: gamenetworkingsockets-src
           submodules: recursive
       
       - name: Setup Make (for OpenSSL / Python) - Linux (x64/arm64) / Android / SLR3 Sniper (x64/arm64)
@@ -286,547 +259,6 @@ jobs:
           packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
 
-      - name: Build Abseil - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
-
-          set ROOTDIR=%CD%
-          mkdir %ROOTDIR%\abseil-artifact-windows\x64\include
-          mkdir %ROOTDIR%\abseil-artifact-windows\x64\lib
-
-          cd abseil-src
-          mkdir build && cd build
-          cmake -S .. -B . -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DABSL_BUILD_TESTING=OFF ^
-            -DABSL_PROPAGATE_CXX_STD=ON ^
-            -DCMAKE_CXX_STANDARD=17 ^
-            -DABSL_BUILD_SHARED=OFF ^
-            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\abseil-windows\x64"
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-
-          xcopy /E /Y "%ROOTDIR%\abseil-windows\x64\include" "%ROOTDIR%\abseil-artifact-windows\x64\include\"
-          copy "%ROOTDIR%\abseil-windows\x64\lib\*.lib" "%ROOTDIR%\abseil-artifact-windows\x64\lib\"
-
-      - name: Build Abseil - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
-
-          set ROOTDIR=%CD%
-          mkdir %ROOTDIR%\abseil-artifact-windows\arm64\include
-          mkdir %ROOTDIR%\abseil-artifact-windows\arm64\lib
-
-          cd abseil-src
-          mkdir build && cd build
-          cmake -S .. -B . -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DABSL_BUILD_TESTING=OFF ^
-            -DABSL_PROPAGATE_CXX_STD=ON ^
-            -DCMAKE_CXX_STANDARD=17 ^
-            -DABSL_BUILD_SHARED=OFF ^
-            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\abseil-windows\arm64"
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-
-          xcopy /E /Y "%ROOTDIR%\abseil-windows\arm64\include" "%ROOTDIR%\abseil-artifact-windows\arm64\include\"
-          copy "%ROOTDIR%\abseil-windows\arm64\lib\*.lib" "%ROOTDIR%\abseil-artifact-windows\arm64\lib\"
-
-      - name: Build Abseil - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          cd abseil-src
-          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include
-          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DABSL_BUILD_TESTING=OFF \
-            -DABSL_PROPAGATE_CXX_STD=ON \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DABSL_BUILD_SHARED=OFF \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-          cp -r install/include/* ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include/
-          cp install/lib/libabsl_*.a ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib/
-        shell: bash
-
-      - name: Build Abseil - Android (arm64-v8a / armeabi-v7a)
-        if: matrix.platform == 'android'
-        run: |
-          cd abseil-src
-          export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          export ANDROID_API=${{ env.ANDROID_API }}
-          export BUILD_DIR=$GITHUB_WORKSPACE/abseil-android-output
-          export FINAL_DIR=$GITHUB_WORKSPACE/abseil-android
-
-          mkdir -p "$BUILD_DIR"
-          mkdir -p "$FINAL_DIR"
-
-          build_abseil() {
-            local arch=$1
-            local abi=$2
-            local temp_dir=$BUILD_DIR/temp-$abi
-
-            echo "Building Abseil for $arch → $abi"
-            mkdir -p "$temp_dir" && cd "$temp_dir"
-            cmake -S $GITHUB_WORKSPACE/abseil-src -B . -GNinja \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DABSL_BUILD_TESTING=OFF \
-              -DABSL_PROPAGATE_CXX_STD=ON \
-              -DCMAKE_CXX_STANDARD=17 \
-              -DABSL_BUILD_SHARED=OFF \
-              -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
-              -DANDROID_ABI=$abi \
-              -DANDROID_PLATFORM=android-$ANDROID_API \
-              -DCMAKE_INSTALL_PREFIX=$PWD/install
-            cmake --build . --config Release --parallel
-            cmake --install . --config Release
-            mkdir -p "$FINAL_DIR/$abi/include"
-            mkdir -p "$FINAL_DIR/$abi/lib"
-            cp -r install/include/* "$FINAL_DIR/$abi/include/"
-            cp install/lib/libabsl_*.a "$FINAL_DIR/$abi/lib/"
-            cd $GITHUB_WORKSPACE/abseil-src
-            rm -rf "$temp_dir"
-          }
-
-          build_abseil android-arm64 arm64-v8a
-          build_abseil android-arm armeabi-v7a
-        shell: bash
-
-      - name: Build Abseil - macOS (arm64)
-        if: matrix.platform == 'macos'
-        run: |
-          cd abseil-src
-          mkdir -p build-output/arm64/include
-          mkdir -p build-output/arm64/lib
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DABSL_BUILD_TESTING=OFF \
-            -DABSL_PROPAGATE_CXX_STD=ON \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DABSL_BUILD_SHARED=OFF \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-          cp -r install/include/* ../build-output/arm64/include/
-          cp install/lib/libabsl_*.a ../build-output/arm64/lib/
-        shell: bash
-
-      - name: Build Abseil - iOS (arm64)
-        if: matrix.platform == 'ios'
-        run: |
-          cd abseil-src
-          mkdir -p build-output/arm64/include
-          mkdir -p build-output/arm64/lib
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DABSL_BUILD_TESTING=OFF \
-            -DABSL_PROPAGATE_CXX_STD=ON \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DABSL_BUILD_SHARED=OFF \
-            -DCMAKE_SYSTEM_NAME=iOS \
-            -DCMAKE_OSX_SYSROOT=iphoneos \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }} \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-          cp -r install/include/* ../build-output/arm64/include/
-          cp install/lib/libabsl_*.a ../build-output/arm64/lib/
-        shell: bash
-
-      - name: Build Protobuf - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
-
-          set ROOTDIR=%CD%
-          mkdir %ROOTDIR%\protobuf-artifact-windows\x64\include
-          mkdir %ROOTDIR%\protobuf-artifact-windows\x64\lib
-          mkdir %ROOTDIR%\protobuf-artifact-windows\x64\bin
-
-          cd protobuf-src
-          mkdir build && cd build
-          cmake -S .. -B . -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -Dprotobuf_BUILD_SHARED_LIBS=OFF ^
-            -Dprotobuf_BUILD_TESTS=OFF ^
-            -Dprotobuf_BUILD_PROTOC=ON ^
-            -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
-            -DCMAKE_CXX_STANDARD=17 ^
-            -DCMAKE_PREFIX_PATH="%ROOTDIR%\abseil-windows\x64" ^
-            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\protobuf-windows\x64"
-          if errorlevel 1 exit 1
-          cmake --build . --config Release --parallel
-          if errorlevel 1 exit 1
-          cmake --install . --config Release
-          if errorlevel 1 exit 1
-
-          xcopy /E /Y "%ROOTDIR%\protobuf-windows\x64\include" "%ROOTDIR%\protobuf-artifact-windows\x64\include\"
-          copy "%ROOTDIR%\protobuf-windows\x64\lib\libprotobuf.lib" "%ROOTDIR%\protobuf-artifact-windows\x64\lib\"
-          copy "%ROOTDIR%\protobuf-windows\x64\bin\protoc.exe" "%ROOTDIR%\protobuf-artifact-windows\x64\bin\"
-
-      - name: Build Protobuf - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
-
-          set ROOTDIR=%CD%
-          mkdir %ROOTDIR%\protobuf-artifact-windows\arm64\include
-          mkdir %ROOTDIR%\protobuf-artifact-windows\arm64\lib
-          mkdir %ROOTDIR%\protobuf-artifact-windows\arm64\bin
-
-          cd protobuf-src
-          mkdir build && cd build
-          cmake -S .. -B . -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -Dprotobuf_BUILD_SHARED_LIBS=OFF ^
-            -Dprotobuf_BUILD_TESTS=OFF ^
-            -Dprotobuf_BUILD_PROTOC=ON ^
-            -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
-            -DCMAKE_CXX_STANDARD=17 ^
-            -DCMAKE_PREFIX_PATH="%ROOTDIR%\abseil-windows\arm64" ^
-            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\protobuf-windows\arm64"
-          if errorlevel 1 exit 1
-          cmake --build . --config Release --parallel
-          if errorlevel 1 exit 1
-          cmake --install . --config Release
-          if errorlevel 1 exit 1
-
-          xcopy /E /Y "%ROOTDIR%\protobuf-windows\arm64\include" "%ROOTDIR%\protobuf-artifact-windows\arm64\include\"
-          copy "%ROOTDIR%\protobuf-windows\arm64\lib\libprotobuf.lib" "%ROOTDIR%\protobuf-artifact-windows\arm64\lib\"
-          copy "%ROOTDIR%\protobuf-windows\arm64\bin\protoc.exe" "%ROOTDIR%\protobuf-artifact-windows\arm64\bin\"
-
-      - name: Build Protobuf - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          cd protobuf-src
-          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include
-          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib
-          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/bin
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
-            -Dprotobuf_BUILD_TESTS=OFF \
-            -Dprotobuf_BUILD_PROTOC=ON \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }} \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel || exit 1
-          cmake --install . --config Release || exit 1
-          cp -r install/include/* ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include/ || exit 1
-          cp install/lib/libprotobuf.a ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib/ || exit 1
-          cp install/bin/protoc ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/bin/ || exit 1
-        shell: bash
-
-      - name: Build Protobuf - Android (arm64-v8a / armeabi-v7a)
-        if: matrix.platform == 'android'
-        run: |
-          cd protobuf-src
-          export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          export ANDROID_API=${{ env.ANDROID_API }}
-          export BUILD_DIR=$GITHUB_WORKSPACE/protobuf-android-output
-          export FINAL_DIR=$GITHUB_WORKSPACE/protobuf-android
-
-          mkdir -p "$BUILD_DIR"
-          mkdir -p "$FINAL_DIR"
-
-          build_protobuf() {
-            local arch=$1
-            local abi=$2
-            local temp_dir=$BUILD_DIR/temp-$abi
-
-            echo "Building Protobuf for $arch → $abi"
-            mkdir -p "$temp_dir" && cd "$temp_dir"
-            cmake -S $GITHUB_WORKSPACE/protobuf-src -B . -GNinja \
-              -DCMAKE_BUILD_TYPE=Release \
-              -Dprotobuf_BUILD_SHARED_LIBS=OFF \
-              -Dprotobuf_BUILD_TESTS=OFF \
-              -Dprotobuf_BUILD_PROTOC=ON \
-              -DCMAKE_CXX_STANDARD=17 \
-              -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-android/$abi \
-              -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
-              -DANDROID_ABI=$abi \
-              -DANDROID_PLATFORM=android-$ANDROID_API \
-              -DCMAKE_INSTALL_PREFIX=$PWD/install
-            cmake --build . --config Release --parallel || exit 1
-            cmake --install . --config Release || exit 1
-            mkdir -p "$FINAL_DIR/$abi/include"
-            mkdir -p "$FINAL_DIR/$abi/lib"
-            mkdir -p "$FINAL_DIR/$abi/bin"
-            cp -r install/include/* "$FINAL_DIR/$abi/include/" || exit 1
-            cp install/lib/libprotobuf.a "$FINAL_DIR/$abi/lib/" || exit 1
-            cp install/bin/protoc "$FINAL_DIR/$abi/bin/" || exit 1
-            cd $GITHUB_WORKSPACE/protobuf-src
-            rm -rf "$temp_dir"
-          }
-
-          build_protobuf android-arm64 arm64-v8a
-          build_protobuf android-arm armeabi-v7a
-        shell: bash
-
-      - name: Build Protobuf - macOS (arm64)
-        if: matrix.platform == 'macos'
-        run: |
-          cd protobuf-src
-          mkdir -p build-output/arm64/include
-          mkdir -p build-output/arm64/lib
-          mkdir -p build-output/arm64/bin
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
-            -Dprotobuf_BUILD_TESTS=OFF \
-            -Dprotobuf_BUILD_PROTOC=ON \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/arm64 \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel || exit 1
-          cmake --install . --config Release || exit 1
-          cp -r install/include/* ../build-output/arm64/include/ || exit 1
-          cp install/lib/libprotobuf.a ../build-output/arm64/lib/ || exit 1
-          cp install/bin/protoc ../build-output/arm64/bin/ || exit 1
-        shell: bash
-
-      - name: Build Protobuf - iOS (arm64)
-        if: matrix.platform == 'ios'
-        run: |
-          cd protobuf-src
-          mkdir -p build-output/arm64/include
-          mkdir -p build-output/arm64/lib
-          mkdir -p build-output/arm64/bin
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
-            -Dprotobuf_BUILD_TESTS=OFF \
-            -Dprotobuf_BUILD_PROTOC=ON \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/abseil-src/build-output/arm64 \
-            -DCMAKE_SYSTEM_NAME=iOS \
-            -DCMAKE_OSX_SYSROOT=iphoneos \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }} \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel || exit 1
-          cmake --install . --config Release || exit 1
-          cp -r install/include/* ../build-output/arm64/include/ || exit 1
-          cp install/lib/libprotobuf.a ../build-output/arm64/lib/ || exit 1
-          cp install/bin/protoc ../build-output/arm64/bin/ || exit 1
-        shell: bash
-
-      - name: Build GameNetworkingSockets - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
-
-          set ROOTDIR=%CD%
-          mkdir "%ROOTDIR%\gamenetworkingsockets-artifact-windows\x64\include"
-          mkdir "%ROOTDIR%\gamenetworkingsockets-artifact-windows\x64\lib"
-
-          cd gamenetworkingsockets-src
-          mkdir build && cd build
-          cmake -S .. -B . -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DBUILD_SHARED_LIBS=OFF ^
-            -DBUILD_TESTS=OFF ^
-            -DBUILD_EXAMPLES=OFF ^
-            -DENABLE_ICE=OFF ^
-            -DUSE_STEAMWEBRTC=OFF ^
-            -DOPENSSL_NO_ENGINE=ON ^
-            -DCMAKE_CXX_STANDARD=17 ^
-            -DCMAKE_SYSTEM_NAME=Windows ^
-            -DProtobuf_PROTOC_EXECUTABLE="%ROOTDIR%\protobuf-windows\x64\bin\protoc.exe" ^
-            -DCMAKE_PREFIX_PATH="%ROOTDIR%\openssl-windows\x64;%ROOTDIR%\protobuf-windows\x64" ^
-            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\gamenetworkingsockets-windows\x64"
-          if errorlevel 1 exit 1
-          cmake --build . --config Release --parallel
-          if errorlevel 1 exit 1
-          cmake --install . --config Release
-          if errorlevel 1 exit 1
-
-          xcopy /E /Y "%ROOTDIR%\gamenetworkingsockets-windows\x64\include" "%ROOTDIR%\gamenetworkingsockets-artifact-windows\x64\include\"
-          copy "%ROOTDIR%\gamenetworkingsockets-windows\x64\lib\GameNetworkingSockets.lib" "%ROOTDIR%\gamenetworkingsockets-artifact-windows\x64\lib\"
-
-      - name: Build GameNetworkingSockets - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
-
-          set ROOTDIR=%CD%
-          mkdir "%ROOTDIR%\gamenetworkingsockets-artifact-windows\arm64\include"
-          mkdir "%ROOTDIR%\gamenetworkingsockets-artifact-windows\arm64\lib"
-
-          cd gamenetworkingsockets-src
-          mkdir build && cd build
-          cmake -S .. -B . -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DBUILD_SHARED_LIBS=OFF ^
-            -DBUILD_TESTS=OFF ^
-            -DBUILD_EXAMPLES=OFF ^
-            -DENABLE_ICE=OFF ^
-            -DUSE_STEAMWEBRTC=OFF ^
-            -DCMAKE_CXX_STANDARD=17 ^
-            -DCMAKE_SYSTEM_NAME=Windows ^
-            -DProtobuf_PROTOC_EXECUTABLE="%ROOTDIR%\protobuf-windows\arm64\bin\protoc.exe" ^
-            -DCMAKE_SYSTEM_PROCESSOR=ARM64 ^
-            -DCMAKE_PREFIX_PATH="%ROOTDIR%\openssl-windows\arm64;%ROOTDIR%\protobuf-windows\arm64" ^
-            -DCMAKE_INSTALL_PREFIX="%ROOTDIR%\gamenetworkingsockets-windows\arm64"
-          if errorlevel 1 exit 1
-          cmake --build . --config Release --parallel
-          if errorlevel 1 exit 1
-          cmake --install . --config Release
-          if errorlevel 1 exit 1
-
-          xcopy /E /Y "%ROOTDIR%\gamenetworkingsockets-windows\arm64\include" "%ROOTDIR%\gamenetworkingsockets-artifact-windows\arm64\include\"
-          copy "%ROOTDIR%\gamenetworkingsockets-windows\arm64\lib\GameNetworkingSockets.lib" "%ROOTDIR%\gamenetworkingsockets-artifact-windows\arm64\lib\"
-
-      - name: Build GameNetworkingSockets - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          cd gamenetworkingsockets-src
-          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include
-          mkdir -p build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DBUILD_TESTS=OFF \
-            -DBUILD_EXAMPLES=OFF \
-            -DENABLE_ICE=OFF \
-            -DUSE_STEAMWEBRTC=OFF \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_SYSTEM_NAME=Linux \
-            -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/bin/protoc \
-            -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }};$GITHUB_WORKSPACE/protobuf-src/build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}" \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel || exit 1
-          cmake --install . --config Release || exit 1
-          cp -r install/include/* ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/include/ || exit 1
-          cp install/lib/libGameNetworkingSockets.a ../build-output/${{ matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64' && 'x86_64' || 'arm64' }}/lib/ || exit 1
-        shell: bash
-
-      - name: Build GameNetworkingSockets - Android (arm64-v8a / armeabi-v7a)
-        if: matrix.platform == 'android'
-        run: |
-          cd gamenetworkingsockets-src
-          export PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          export ANDROID_API=${{ env.ANDROID_API }}
-          export BUILD_DIR=$GITHUB_WORKSPACE/gamenetworkingsockets-android-output
-          export FINAL_DIR=$GITHUB_WORKSPACE/gamenetworkingsockets-android
-
-          mkdir -p "$BUILD_DIR"
-          mkdir -p "$FINAL_DIR"
-
-          build_gamenetworkingsockets() {
-            local arch=$1
-            local abi=$2
-            local temp_dir=$BUILD_DIR/temp-$abi
-
-            echo "Building GameNetworkingSockets for $arch → $abi"
-            mkdir -p "$temp_dir" && cd "$temp_dir"
-            cmake -S $GITHUB_WORKSPACE/gamenetworkingsockets-src -B . -GNinja \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DBUILD_SHARED_LIBS=OFF \
-              -DBUILD_TESTS=OFF \
-              -DBUILD_EXAMPLES=OFF \
-              -DENABLE_ICE=OFF \
-              -DUSE_STEAMWEBRTC=OFF \
-              -DCMAKE_CXX_STANDARD=17 \
-              -DCMAKE_SYSTEM_NAME=Android \
-              -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-android/$abi/bin/protoc \
-              -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-android/$abi;$GITHUB_WORKSPACE/protobuf-android/$abi" \
-              -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
-              -DANDROID_ABI=$abi \
-              -DANDROID_PLATFORM=android-$ANDROID_API \
-              -DCMAKE_INSTALL_PREFIX=$PWD/install
-            cmake --build . --config Release --parallel || exit 1
-            cmake --install . --config Release || exit 1
-            mkdir -p "$FINAL_DIR/$abi/include"
-            mkdir -p "$FINAL_DIR/$abi/lib"
-            cp -r install/include/* "$FINAL_DIR/$abi/include/" || exit 1
-            cp install/lib/libGameNetworkingSockets.a "$FINAL_DIR/$abi/lib/" || exit 1
-            cd $GITHUB_WORKSPACE/gamenetworkingsockets-src
-            rm -rf "$temp_dir"
-          }
-
-          build_gamenetworkingsockets android-arm64 arm64-v8a
-          build_gamenetworkingsockets android-arm armeabi-v7a
-        shell: bash
-
-      - name: Build GameNetworkingSockets - macOS (arm64)
-        if: matrix.platform == 'macos'
-        run: |
-          cd gamenetworkingsockets-src
-          mkdir -p build-output/arm64/include
-          mkdir -p build-output/arm64/lib
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DBUILD_TESTS=OFF \
-            -DBUILD_EXAMPLES=OFF \
-            -DENABLE_ICE=OFF \
-            -DUSE_STEAMWEBRTC=OFF \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_SYSTEM_NAME=Darwin \
-            -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/arm64/bin/protoc \
-            -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-macos;$GITHUB_WORKSPACE/protobuf-src/build-output/arm64" \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel || exit 1
-          cmake --install . --config Release || exit 1
-          cp -r install/include/* ../build-output/arm64/include/ || exit 1
-          cp install/lib/libGameNetworkingSockets.a ../build-output/arm64/lib/ || exit 1
-        shell: bash
-
-      - name: Build GameNetworkingSockets - iOS (arm64)
-        if: matrix.platform == 'ios'
-        run: |
-          cd gamenetworkingsockets-src
-          mkdir -p build-output/arm64/include
-          mkdir -p build-output/arm64/lib
-          mkdir build && cd build
-          cmake -S .. -B . -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DBUILD_TESTS=OFF \
-            -DBUILD_EXAMPLES=OFF \
-            -DENABLE_ICE=OFF \
-            -DUSE_STEAMWEBRTC=OFF \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_SYSTEM_NAME=Darwin \
-            -DProtobuf_PROTOC_EXECUTABLE=$GITHUB_WORKSPACE/protobuf-src/build-output/arm64/bin/protoc \
-            -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openssl-ios;$GITHUB_WORKSPACE/protobuf-src/build-output/arm64" \
-            -DCMAKE_SYSTEM_NAME=iOS \
-            -DCMAKE_OSX_SYSROOT=iphoneos \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.IOS_DEPLOYMENT_TARGET }} \
-            -DCMAKE_INSTALL_PREFIX=$PWD/install
-          cmake --build . --config Release --parallel || exit 1
-          cmake --install . --config Release || exit 1
-          cp -r install/include/* ../build-output/arm64/include/ || exit 1
-          cp install/lib/libGameNetworkingSockets.a ../build-output/arm64/lib/ || exit 1
-        shell: bash
-
       - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-arm64' }}
         uses: libsdl-org/setup-sdl@main
@@ -928,24 +360,6 @@ jobs:
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
 
-      - name: Get libraire OpenSSL - macOS (arm64)
-        if: matrix.platform == 'macos'
-        run: |
-          mkdir -p openssl-macos/include
-          mkdir -p openssl-macos/lib
-          cp -a openssl-src/macosx/include/* openssl-macos/include/
-          cp -a openssl-src/macosx/lib/* openssl-macos/lib/
-        shell: bash
-
-      - name: Get libraire OpenSSL - iOS (arm64)
-        if: matrix.platform == 'ios'
-        run: |
-          mkdir -p openssl-ios/include
-          mkdir -p openssl-ios/lib
-          cp -a openssl-src/iphoneos/include/* openssl-ios/include/
-          cp -a openssl-src/iphoneos/lib/* openssl-ios/lib/
-        shell: bash
-
       - name: Build OpenSSL - Windows (x64)
         if: matrix.platform == 'windows-x64'
         shell: cmd
@@ -1028,7 +442,7 @@ jobs:
           make install_dev || true
           cp -r include/* ../build-output/arm64/include/
           cp libcrypto.a libssl.a ../build-output/arm64/lib/
-        shell: bash      
+        shell: bash
 
       - name: Build OpenSSL - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
@@ -1064,6 +478,24 @@ jobs:
       
           build_openssl android-arm64 arm64-v8a
           build_openssl android-arm armeabi-v7a
+
+      - name: Get libraire OpenSSL - macOS (arm64)
+        if: matrix.platform == 'macos'
+        run: |
+          mkdir -p openssl-macos/include
+          mkdir -p openssl-macos/lib
+          cp -a openssl-src/macosx/include/* openssl-macos/include/
+          cp -a openssl-src/macosx/lib/* openssl-macos/lib/
+        shell: bash
+
+      - name: Get libraire OpenSSL - iOS (arm64)
+        if: matrix.platform == 'ios'
+        run: |
+          mkdir -p openssl-ios/include
+          mkdir -p openssl-ios/lib
+          cp -a openssl-src/iphoneos/include/* openssl-ios/include/
+          cp -a openssl-src/iphoneos/lib/* openssl-ios/lib/
+        shell: bash
         
       - name: Build ONNX Runtime - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -1452,132 +884,6 @@ jobs:
           name: sdl3_shadercross-${{ matrix.platform }}
           path: sdl_shadercross-src/prefix
 
-      - name: Upload Protobuf Artifacts - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-windows-x64
-          path: protobuf-artifact-windows/x64
-
-      - name: Upload Protobuf Artifacts - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-windows-arm64
-          path: protobuf-artifact-windows/arm64
-
-      - name: Upload Protobuf Artifacts - Linux (x64)
-        if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-linux-x64
-          path: protobuf-src/build-output/x86_64
-
-      - name: Upload Protobuf Artifacts - Linux (arm64)
-        if: matrix.platform == 'linux-arm64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-linux-arm64
-          path: protobuf-src/build-output/arm64
-
-      - name: Upload Protobuf Artifacts - SLR3 Sniper (x64)
-        if: matrix.platform == 'slr3-sniper-x64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-slr3-sniper-x64
-          path: protobuf-src/build-output/x86_64
-
-      - name: Upload Protobuf Artifacts - SLR3 Sniper (arm64)
-        if: matrix.platform == 'slr3-sniper-arm64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-slr3-sniper-arm64
-          path: protobuf-src/build-output/arm64
-
-      - name: Upload Protobuf Artifacts - Android (arm64-v8a / armeabi-v7a)
-        if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-android-arm64v8a_armeabiv7a
-          path: protobuf-android/
-
-      - name: Upload Protobuf Artifacts - macOS (arm64)
-        if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-macos-arm64
-          path: protobuf-src/build-output/arm64
-
-      - name: Upload Protobuf Artifacts - iOS (arm64)
-        if: matrix.platform == 'ios'
-        uses: actions/upload-artifact@v4
-        with:
-          name: protobuf-ios-arm64
-          path: protobuf-src/build-output/arm64
-
-      - name: Upload GameNetworkingSockets Artifacts - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-windows-x64
-          path: gamenetworkingsockets-artifact-windows/x64
-
-      - name: Upload GameNetworkingSockets Artifacts - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-windows-arm64
-          path: gamenetworkingsockets-artifact-windows/arm64
-
-      - name: Upload GameNetworkingSockets Artifacts - Linux (x64)
-        if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-linux-x64
-          path: gamenetworkingsockets-src/build-output/x86_64
-
-      - name: Upload GameNetworkingSockets Artifacts - Linux (arm64)
-        if: matrix.platform == 'linux-arm64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-linux-arm64
-          path: gamenetworkingsockets-src/build-output/arm64
-
-      - name: Upload GameNetworkingSockets Artifacts - SLR3 Sniper (x64)
-        if: matrix.platform == 'slr3-sniper-x64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-slr3-sniper-x64
-          path: gamenetworkingsockets-src/build-output/x86_64
-
-      - name: Upload GameNetworkingSockets Artifacts - SLR3 Sniper (arm64)
-        if: matrix.platform == 'slr3-sniper-arm64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-slr3-sniper-arm64
-          path: gamenetworkingsockets-src/build-output/arm64
-
-      - name: Upload GameNetworkingSockets Artifacts - Android (arm64-v8a / armeabi-v7a)
-        if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-android-arm64v8a_armeabiv7a
-          path: gamenetworkingsockets-android/
-
-      - name: Upload GameNetworkingSockets Artifacts - macOS (arm64)
-        if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-macos-arm64
-          path: gamenetworkingsockets-src/build-output/arm64
-
-      - name: Upload GameNetworkingSockets Artifacts - iOS (arm64)
-        if: matrix.platform == 'ios'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamenetworkingsockets-ios-arm64
-          path: gamenetworkingsockets-src/build-output/arm64
-
   combine-artifacts:
     name: Combine artifacts
     needs: build-libs
@@ -1660,46 +966,6 @@ jobs:
           cp -a temp/onnxruntime-ios/include/* merged2/ios/include/
           cp -a temp/onnxruntime-ios/lib/* merged2/ios/lib/
 
-
-          # ------- Protobuf ---------
-          # Linux (x64 / arm64)
-          mkdir -p merged3/linux/include merged3/linux/lib/x64 merged3/linux/lib/arm64
-          cp -a temp/protobuf-linux-x64/include/* merged3/linux/include/
-          cp -a temp/protobuf-linux-x64/lib/* merged3/linux/lib/x64/
-          cp -a temp/protobuf-linux-arm64/include/* merged3/linux/include/
-          cp -a temp/protobuf-linux-arm64/lib/* merged3/linux/lib/arm64/
-
-          # Windows (x64 / arm64)
-          mkdir -p merged3/windows/include merged3/windows/lib/x64 merged3/windows/lib/arm64
-          cp -a temp/protobuf-windows-x64/include/* merged3/windows/include/
-          cp -a temp/protobuf-windows-x64/lib/* merged3/windows/lib/x64/
-          cp -a temp/protobuf-windows-arm64/include/* merged3/windows/include/
-          cp -a temp/protobuf-windows-arm64/lib/* merged3/windows/lib/arm64/
-
-          # Android (arm64-v8a / armeabi-v7a)
-          mkdir -p merged3/android/include merged3/android/lib/arm64-v8a merged3/android/lib/armeabi-v7a
-          cp -a temp/protobuf-android-arm64v8a_armeabiv7a/arm64-v8a/include/* merged3/android/include/
-          cp -a temp/protobuf-android-arm64v8a_armeabiv7a/arm64-v8a/lib/* merged3/android/lib/arm64-v8a/
-          cp -a temp/protobuf-android-arm64v8a_armeabiv7a/armeabi-v7a/lib/* merged3/android/lib/armeabi-v7a/
-
-          # SLR3 Sniper (x64 / arm64)
-          mkdir -p merged3/slr3-sniper/include merged3/slr3-sniper/lib/x64 merged3/slr3-sniper/lib/arm64
-          cp -a temp/protobuf-slr3-sniper-x64/include/* merged3/slr3-sniper/include/
-          cp -a temp/protobuf-slr3-sniper-x64/lib/* merged3/slr3-sniper/lib/x64/
-          cp -a temp/protobuf-slr3-sniper-arm64/include/* merged3/slr3-sniper/include/
-          cp -a temp/protobuf-slr3-sniper-arm64/lib/* merged3/slr3-sniper/lib/arm64/
-
-          # macOS (arm64)
-          mkdir -p merged3/macos/include merged3/macos/lib
-          cp -a temp/protobuf-macos-arm64/include/* merged3/macos/include/
-          cp -a temp/protobuf-macos-arm64/lib/* merged3/macos/lib/
-
-          # iOS (arm64)
-          mkdir -p merged3/ios/include merged3/ios/lib
-          cp -a temp/protobuf-ios-arm64/include/* merged3/ios/include/
-          cp -a temp/protobuf-ios-arm64/lib/* merged3/ios/lib/
-
-
           # ------- SDL3_shadercross ---------
           # Linux (x64 / arm64)
           mkdir -p merged4/linux/include merged4/linux/lib/x64 merged4/linux/lib/arm64
@@ -1738,45 +1004,6 @@ jobs:
           cp -a temp/sdl3_shadercross-ios-arm64/include/* merged4/ios/include/
           cp -a temp/sdl3_shadercross-ios-arm64/lib/* merged4/ios/lib/arm64/
 
-
-          # --------- GameNetworkingSockets ---------
-          # Linux (x64 / arm64)
-          mkdir -p merged5/linux/include merged5/linux/lib/x64 merged5/linux/lib/arm64
-          cp -a temp/gamenetworkingsockets-linux-x64/include/* merged5/linux/include/
-          cp -a temp/gamenetworkingsockets-linux-x64/lib/* merged5/linux/lib/x64/
-          cp -a temp/gamenetworkingsockets-linux-arm64/include/* merged5/linux/include/
-          cp -a temp/gamenetworkingsockets-linux-arm64/lib/* merged5/linux/lib/arm64/
-
-          # Windows (x64 / arm64)
-          mkdir -p merged5/windows/include merged5/windows/lib/x64 merged5/windows/lib/arm64
-          cp -a temp/gamenetworkingsockets-windows-x64/include/* merged5/windows/include/
-          cp -a temp/gamenetworkingsockets-windows-x64/lib/* merged5/windows/lib/x64/
-          cp -a temp/gamenetworkingsockets-windows-arm64/include/* merged5/windows/include/
-          cp -a temp/gamenetworkingsockets-windows-arm64/lib/* merged5/windows/lib/arm64/
-
-          # Android (arm64-v8a / armeabi-v7a)
-          mkdir -p merged5/android/include merged5/android/lib/arm64-v8a merged5/android/lib/armeabi-v7a
-          cp -a temp/gamenetworkingsockets-android-arm64v8a_armeabiv7a/arm64-v8a/include/* merged5/android/include/
-          cp -a temp/gamenetworkingsockets-android-arm64v8a_armeabiv7a/arm64-v8a/lib/* merged5/android/lib/arm64-v8a/
-          cp -a temp/gamenetworkingsockets-android-arm64v8a_armeabiv7a/armeabi-v7a/lib/* merged5/android/lib/armeabi-v7a/
-
-          # SLR3 Sniper (x64 / arm64)
-          mkdir -p merged5/slr3-sniper/include merged5/slr3-sniper/lib/x64 merged5/slr3-sniper/lib/arm64
-          cp -a temp/gamenetworkingsockets-slr3-sniper-x64/include/* merged5/slr3-sniper/include/
-          cp -a temp/gamenetworkingsockets-slr3-sniper-x64/lib/* merged5/slr3-sniper/lib/x64/
-          cp -a temp/gamenetworkingsockets-slr3-sniper-arm64/include/* merged5/slr3-sniper/include/
-          cp -a temp/gamenetworkingsockets-slr3-sniper-arm64/lib/* merged5/slr3-sniper/lib/arm64/
-
-          # macOS (arm64)
-          mkdir -p merged5/macos/include merged5/macos/lib
-          cp -a temp/gamenetworkingsockets-macos-arm64/include/* merged5/macos/include/
-          cp -a temp/gamenetworkingsockets-macos-arm64/lib/* merged5/macos/lib/
-
-          # iOS (arm64)
-          mkdir -p merged5/ios/include merged5/ios/lib
-          cp -a temp/gamenetworkingsockets-ios-arm64/include/* merged5/ios/include/
-          cp -a temp/gamenetworkingsockets-ios-arm64/lib/* merged5/ios/lib/
-
       - name: Zip merged folders
         run: |
           cd merged
@@ -1791,13 +1018,6 @@ jobs:
           zip -r ../onnxruntime-slr3-sniper.zip slr3-sniper/*
           zip -r ../onnxruntime-macos.zip macos/*
           zip -r ../onnxruntime-ios.zip ios/*
-          cd ../merged3
-          zip -r ../protobuf-linux.zip linux/*
-          zip -r ../protobuf-windows.zip windows/*
-          zip -r ../protobuf-android.zip android/*
-          zip -r ../protobuf-slr3-sniper.zip slr3-sniper/*
-          zip -r ../protobuf-macos.zip macos/*
-          zip -r ../protobuf-ios.zip ios/*
           cd ../merged4
           zip -r ../sdl_shadercross-linux.zip linux/*
           zip -r ../sdl_shadercross-windows.zip windows/*
@@ -1805,35 +1025,22 @@ jobs:
           zip -r ../sdl_shadercross-slr3-sniper.zip slr3-sniper/*
           zip -r ../sdl_shadercross-macos.zip macos/*
           zip -r ../sdl_shadercross-ios.zip ios/*
-          cd merged5
-          zip -r ../gamenetworkingsockets-linux.zip linux/*
-          zip -r ../gamenetworkingsockets-windows.zip windows/*
-          zip -r ../gamenetworkingsockets-android.zip android/*
-          zip -r ../gamenetworkingsockets-slr3-sniper.zip slr3-sniper/*
-          zip -r ../gamenetworkingsockets-macos.zip macos/*
-          zip -r ../gamenetworkingsockets-ios.zip ios/*
 
       - name: Generate release notes
         run: |
           OPENSSL_TAG="${{ env.OPENSSL_TAG }}"
           ONNXRUNTIME_TAG="${{ env.ONNXRUNTIME_TAG }}"
           SDL_SHADERCROSS_TAG="${{ env.SDL_SHADERCROSS_TAG }}"
-          PROTOBUF_TAG="${{ env.PROTOBUF_TAG }}"
-          GAMENETWORKINGSOCKETS_TAG="742f75bdfdb78c0971923c8c6ae2fad3a1a7758f"
 
           OPENSSL_VERSION="${OPENSSL_TAG#openssl-}"
           ONNX_VERSION="${ONNXRUNTIME_TAG#v}"
           SDL_SHADERCROSS_VERSION="${SDL_SHADERCROSS_TAG}"
-          PROTOBUF_VERSION="${PROTOBUF_TAG#v}"
-          GAMENETWORKINGSOCKETS_VERSION="${GAMENETWORKINGSOCKETS_TAG}"
 
           echo "## Build Dependencies Versions" > release_notes.md
           echo "" >> release_notes.md
           echo "- OpenSSL: $OPENSSL_VERSION" >> release_notes.md
           echo "- ONNX Runtime: $ONNX_VERSION" >> release_notes.md
           echo "- SDL3_shadercross: $SDL_SHADERCROSS_VERSION" >> release_notes.md
-          echo "- Protobuf: $PROTOBUF_VERSION" >> release_notes.md
-          echo "- GameNetworkingSockets: $GAMENETWORKINGSOCKETS_VERSION" >> release_notes.md
           
       - name: Deploy assets to GitHub Releases
         uses: softprops/action-gh-release@v2
@@ -1855,17 +1062,5 @@ jobs:
             sdl_shadercross-slr3-sniper.zip
             sdl_shadercross-macos.zip
             sdl_shadercross-ios.zip
-            protobuf-linux.zip
-            protobuf-windows.zip
-            protobuf-android.zip
-            protobuf-slr3-sniper.zip
-            protobuf-macos.zip
-            protobuf-ios.zip
-            gamenetworkingsockets-linux.zip
-            gamenetworkingsockets-windows.zip
-            gamenetworkingsockets-android.zip
-            gamenetworkingsockets-slr3-sniper.zip
-            gamenetworkingsockets-macos.zip
-            gamenetworkingsockets-ios.zip
           body_path: release_notes.md
           #token:

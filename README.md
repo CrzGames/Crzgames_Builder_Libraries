@@ -12,11 +12,9 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 
 | Librarie | Version |
 |----------|---------|
-| **Onnx Runtime** | v1.22.1 |
-| **OpenSSL** | v3.5.1 |
-| **SDL3_shadercross** | commit_sha: 392d12afc1ef084c5cd656307180027399b7a54e |
-| **protobuf** | v31.1 |
-| **GameNetworkingSockets (Fork repository Valve)** | commit_sha: 725e273c7442bac7a8bc903c0b210b1c15c34d92 (+PR for fixed bugs) |
+| **Onnx Runtime** | v1.22.2 |
+| **OpenSSL** | v3.5.2 |
+| **SDL3_shadercross** | commit_sha: 4ce748310f57d405b4eb2a79fbbc7e974d6491ec |
 
 <br />
 
