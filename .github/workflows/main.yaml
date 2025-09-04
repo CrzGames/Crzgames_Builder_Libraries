@@ -444,6 +444,9 @@ jobs:
           if-no-files-found: error
           path: |
             nats-client-c-src/build/lib/Release/nats_static.lib
+            nats-client-c-src/src/nats.h
+            nats-client-c-src/src/version.h
+            nats-client-c-src/src/status.h
 
       - name: Build hiredis - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -483,7 +486,6 @@ jobs:
             hiredis-src/alloc.h
             hiredis-src/read.h
             hiredis-src/sds.h
-            hiredis/async.h
 
       - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-arm64' }}
