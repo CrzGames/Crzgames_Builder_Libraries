@@ -10,11 +10,13 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 
 ## 📋 Libraries - Latest Release Artifacts :
 
-| Librarie | Version |
+| Librarie | Tag/Version |
 |----------|---------|
 | **Onnx Runtime** | v1.22.2 |
 | **OpenSSL** | v3.5.2 |
 | **SDL3_shadercross** | commit_sha: 4ce748310f57d405b4eb2a79fbbc7e974d6491ec |
+| **NATS Client C (windows-x64)** | v3.10.1 |
+| **hiredis (windows-x64)** | v1.3.0 |
 
 <br />
 

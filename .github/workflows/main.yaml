@@ -14,6 +14,8 @@ env:
   OPENSSL_APPLE_TAG: "3.3.3001"
   ONNXRUNTIME_TAG: "v1.22.2"
   SDL_SHADERCROSS_TAG: "4ce748310f57d405b4eb2a79fbbc7e974d6491ec"
+  NATS_CLIENT_C_TAG: "v3.10.1"
+  HI_REDIS_TAG: "v1.3.0"
   ANDROID_NDK_VERSION: "28.2.13676358"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
@@ -53,11 +55,11 @@ jobs:
             platform: slr3-sniper-x64
             container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:3.0.20250519.130773"
             shell: bash
-          - name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
-            os: ubuntu-24.04-arm
-            platform: slr3-sniper-arm64
-            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250519.130773"
-            shell: bash
+          #- name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
+          #  os: ubuntu-24.04-arm
+          #  platform: slr3-sniper-arm64
+          #  container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250519.130773"
+          #  shell: bash
           - name: Ubuntu 24.04 (x64) for Android
             os: ubuntu-latest
             platform: android
@@ -75,7 +77,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout ONNX Runtime - All Platforms
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: Microsoft/onnxruntime
           ref: ${{ env.ONNXRUNTIME_TAG }}
@@ -83,7 +85,7 @@ jobs:
 
       - name: Checkout OpenSSL - All Platforms (except macOS / iOS)
         if: matrix.platform != 'macos' && matrix.platform != 'ios'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: openssl/openssl
           ref: ${{ env.OPENSSL_TAG }}
@@ -91,7 +93,7 @@ jobs:
 
       - name: Checkout OpenSSL - macOS (arm64) / iOS (arm64)
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: krzyzanowskim/OpenSSL
           ref: ${{ env.OPENSSL_APPLE_TAG }}
@@ -99,13 +101,29 @@ jobs:
       
       - name: Checkout SDL3_shadercross - All Platforms (except iOS / Android)
         if: matrix.platform != 'ios' && matrix.platform != 'android'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL_shadercross
           ref: ${{ env.SDL_SHADERCROSS_TAG }}
           path: sdl_shadercross-src
           submodules: recursive
-      
+
+      - name: Checkout NATS Client C - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/checkout@v5
+        with:
+          repository: nats-io/nats.c
+          path: nats-client-c-src
+          ref: ${{ env.NATS_CLIENT_C_TAG }}
+
+      - name: Checkout hiredis - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/checkout@v5
+        with:
+          repository: redis/hiredis
+          path: hiredis-src
+          ref: ${{ env.HI_REDIS_TAG }}
+
       - name: Setup Make (for OpenSSL / Python) - Linux (x64/arm64) / Android / SLR3 Sniper (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'android' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
         run: |
@@ -247,7 +265,7 @@ jobs:
 
       - name: Setup Java - Android
         if: matrix.platform == 'android'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'oracle'
           java-version: ${{ env.JAVA_VERSION }}
@@ -258,107 +276,6 @@ jobs:
         with:
           packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
-
-      - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-arm64' }}
-        uses: libsdl-org/setup-sdl@main
-        with:
-          cmake-generator: Ninja
-          version: 3-head
-          sdl-test: false
-          shell: sh
-          discriminator: ${{ matrix.platform }}
-          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
-  
-      - name: Build SDL3 from source - Windows (arm64)
-        # setup-sdl ne fonctionne pas sur Windows arm64
-        if: matrix.platform == 'windows-arm64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
-      
-          git clone --depth=1 https://github.com/libsdl-org/SDL SDL3-src
-          cd SDL3-src
-      
-          cmake -B ../SDL3-build -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DSDL_STATIC=OFF ^
-            -DCMAKE_SYSTEM_PROCESSOR=ARM64 ^
-            -DCMAKE_INSTALL_PREFIX="%CD%\..\SDL3-arm64" ^
-            -DSDL_INSTALL_CMAKE_DIR=lib/cmake/SDL3
-      
-          cmake --build ../SDL3-build --target install
-        
-      - name: Build SDL3_shadercross - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
-      
-          cd sdl_shadercross-src
-      
-          cmake -S . -B build -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DSDLSHADERCROSS_DXC=ON ^
-            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON ^
-            -DSDLSHADERCROSS_SHARED=ON ^
-            -DSDLSHADERCROSS_STATIC=ON ^
-            -DSDLSHADERCROSS_VENDORED=ON ^
-            -DSDLSHADERCROSS_CLI=ON ^
-            -DSDLSHADERCROSS_WERROR=OFF ^
-            -DSDLSHADERCROSS_INSTALL=ON ^
-            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
-            -DCMAKE_INSTALL_PREFIX="%CD%\prefix" ^
-            -DCMAKE_PREFIX_PATH="%CD%\..\SDL3-arm64\cmake"
-      
-          cmake --build build --config Release --parallel --verbose
-          cmake --install build --config Release        
-
-      - name: Build SDL3_shadercross - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
-      
-          cd sdl_shadercross-src
-      
-          cmake -S . -B build -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DSDLSHADERCROSS_DXC=ON ^
-            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON ^
-            -DSDLSHADERCROSS_SHARED=ON ^
-            -DSDLSHADERCROSS_STATIC=ON ^
-            -DSDLSHADERCROSS_VENDORED=ON ^
-            -DSDLSHADERCROSS_CLI=ON ^
-            -DSDLSHADERCROSS_WERROR=OFF ^
-            -DSDLSHADERCROSS_INSTALL=ON ^
-            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
-            -DCMAKE_INSTALL_PREFIX="%CD%\prefix"
-      
-          cmake --build build --config Release --parallel --verbose
-          cmake --install build --config Release
-
-      - name: Build SDL3_shadercross - Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-x64' && matrix.platform != 'windows-arm64' }}
-        run: |
-          cd sdl_shadercross-src
-          
-          cmake -S . -B build -GNinja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DSDLSHADERCROSS_DXC=ON \
-            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON \
-            -DSDLSHADERCROSS_SHARED=ON \
-            -DSDLSHADERCROSS_STATIC=ON \
-            -DSDLSHADERCROSS_VENDORED=ON \
-            -DSDLSHADERCROSS_CLI=ON \
-            -DSDLSHADERCROSS_WERROR=OFF \
-            -DSDLSHADERCROSS_INSTALL=ON \
-            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
-            -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
-            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
-        
-          cmake --build build --config Release --parallel --verbose
-          cmake --install build --config Release
 
       - name: Build OpenSSL - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -387,7 +304,7 @@ jobs:
           xcopy /E /Y %ROOTDIR%\openssl-windows\x64\include %ROOTDIR%\openssl-artifact-windows\x64\include\
           copy %ROOTDIR%\openssl-windows\x64\lib\libcrypto.lib %ROOTDIR%\openssl-artifact-windows\x64\lib\
           copy %ROOTDIR%\openssl-windows\x64\lib\libssl.lib %ROOTDIR%\openssl-artifact-windows\x64\lib\
-      
+
       - name: Build OpenSSL - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
         shell: cmd
@@ -496,6 +413,178 @@ jobs:
           cp -a openssl-src/iphoneos/include/* openssl-ios/include/
           cp -a openssl-src/iphoneos/lib/* openssl-ios/lib/
         shell: bash
+
+      - name: Build Nats Client C - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        shell: cmd
+        run: |
+          :: Initialiser l’environnement Visual Studio
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+
+          :: Générer les fichiers dans build/ à partir de la racine du projet
+          cd nats-client-c-src
+
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 ^
+            -DNATS_BUILD_STREAMING=OFF ^
+            -DNATS_BUILD_LIB_STATIC=ON ^
+            -DNATS_BUILD_LIB_SHARED=OFF ^
+            -DNATS_BUILD_EXAMPLES=OFF ^
+            -DOPENSSL_ROOT_DIR="%GITHUB_WORKSPACE%\openssl-artifact-windows\x64" ^
+            -DOPENSSL_CRYPTO_LIBRARY="%GITHUB_WORKSPACE%\openssl-artifact-windows\x64\lib\libcrypto.lib" ^
+            -DOPENSSL_SSL_LIBRARY="%GITHUB_WORKSPACE%\openssl-artifact-windows\x64\lib\libssl.lib"
+
+          :: Build UNIQUEMENT la lib statique pour ne pas construire les tests
+          cmake --build build --target nats_static --config Release --parallel
+
+      - name: Upload NATS Client C Artifacts - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nats-windows-x64
+          if-no-files-found: error
+          path: |
+            nats-client-c-src/build/lib/Release/nats_static.lib
+
+      - name: Build hiredis - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        shell: cmd
+        run: |
+          :: Initialiser l’environnement Visual Studio
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+
+          :: Aller dans le dossier du repo hiredis-src
+          cd hiredis-src
+
+          :: Configure: build static + SSL + pas de tests/exemples/nuget
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 ^
+            -DBUILD_SHARED_LIBS=OFF ^
+            -DENABLE_SSL=ON ^
+            -DDISABLE_TESTS=ON ^
+            -DENABLE_EXAMPLES=OFF ^
+            -DENABLE_NUGET=OFF ^
+            -DOPENSSL_USE_STATIC_LIBS=ON ^
+            -DOPENSSL_ROOT_DIR="%GITHUB_WORKSPACE%\openssl-artifact-windows\x64" ^
+            -DOPENSSL_CRYPTO_LIBRARY="%GITHUB_WORKSPACE%\openssl-artifact-windows\x64\lib\libcrypto.lib" ^
+            -DOPENSSL_SSL_LIBRARY="%GITHUB_WORKSPACE%\openssl-artifact-windows\x64\lib\libssl.lib"
+
+          :: Build en Release
+          cmake --build build --config Release --parallel
+
+      - name: Upload hiredis Artifacts - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hiredis-windows-x64
+          if-no-files-found: error
+          path: |
+            hiredis-src/build/Release/hiredis.lib
+            hiredis-src/build/Release/hiredis_ssl.lib
+            hiredis-src/hiredis.h
+            hiredis-src/alloc.h
+            hiredis-src/read.h
+            hiredis-src/sds.h
+            hiredis/async.h
+
+      - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-arm64' }}
+        uses: libsdl-org/setup-sdl@main
+        with:
+          cmake-generator: Ninja
+          version: 3-head
+          sdl-test: false
+          shell: sh
+          discriminator: ${{ matrix.platform }}
+          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
+  
+      - name: Build SDL3 from source - Windows (arm64)
+        # setup-sdl ne fonctionne pas sur Windows arm64
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+      
+          git clone --depth=1 https://github.com/libsdl-org/SDL SDL3-src
+          cd SDL3-src
+      
+          cmake -B ../SDL3-build -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DSDL_STATIC=OFF ^
+            -DCMAKE_SYSTEM_PROCESSOR=ARM64 ^
+            -DCMAKE_INSTALL_PREFIX="%CD%\..\SDL3-arm64" ^
+            -DSDL_INSTALL_CMAKE_DIR=lib/cmake/SDL3
+      
+          cmake --build ../SDL3-build --target install
+        
+      - name: Build SDL3_shadercross - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+      
+          cd sdl_shadercross-src
+      
+          cmake -S . -B build -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DSDLSHADERCROSS_DXC=ON ^
+            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_STATIC=ON ^
+            -DSDLSHADERCROSS_VENDORED=ON ^
+            -DSDLSHADERCROSS_CLI=ON ^
+            -DSDLSHADERCROSS_WERROR=OFF ^
+            -DSDLSHADERCROSS_INSTALL=ON ^
+            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
+            -DCMAKE_INSTALL_PREFIX="%CD%\prefix" ^
+            -DCMAKE_PREFIX_PATH="%CD%\..\SDL3-arm64\cmake"
+      
+          cmake --build build --config Release --parallel --verbose
+          cmake --install build --config Release        
+
+      - name: Build SDL3_shadercross - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+      
+          cd sdl_shadercross-src
+      
+          cmake -S . -B build -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DSDLSHADERCROSS_DXC=ON ^
+            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_SHARED=ON ^
+            -DSDLSHADERCROSS_STATIC=ON ^
+            -DSDLSHADERCROSS_VENDORED=ON ^
+            -DSDLSHADERCROSS_CLI=ON ^
+            -DSDLSHADERCROSS_WERROR=OFF ^
+            -DSDLSHADERCROSS_INSTALL=ON ^
+            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON ^
+            -DCMAKE_INSTALL_PREFIX="%CD%\prefix"
+      
+          cmake --build build --config Release --parallel --verbose
+          cmake --install build --config Release
+
+      - name: Build SDL3_shadercross - Linux (x64/arm64) / SLR3 Sniper (x64/arm64) / macOS (arm64)
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-x64' && matrix.platform != 'windows-arm64' }}
+        run: |
+          cd sdl_shadercross-src
+          
+          cmake -S . -B build -GNinja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSDLSHADERCROSS_DXC=ON \
+            -DSDLSHADERCROSS_SPIRVCROSS_SHARED=ON \
+            -DSDLSHADERCROSS_SHARED=ON \
+            -DSDLSHADERCROSS_STATIC=ON \
+            -DSDLSHADERCROSS_VENDORED=ON \
+            -DSDLSHADERCROSS_CLI=ON \
+            -DSDLSHADERCROSS_WERROR=OFF \
+            -DSDLSHADERCROSS_INSTALL=ON \
+            -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
+            -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
+            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
+        
+          cmake --build build --config Release --parallel --verbose
+          cmake --install build --config Release
         
       - name: Build ONNX Runtime - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -890,10 +979,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download All Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: temp
 
