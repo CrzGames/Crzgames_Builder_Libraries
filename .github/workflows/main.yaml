@@ -109,7 +109,7 @@ jobs:
           submodules: recursive
 
       - name: Checkout NATS Client C - Windows (x64)
-        if: matrix.platform == 'windows-x64'
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'macos'
         uses: actions/checkout@v5
         with:
           repository: nats-io/nats.c
@@ -117,7 +117,7 @@ jobs:
           ref: ${{ env.NATS_CLIENT_C_TAG }}
 
       - name: Checkout hiredis - Windows (x64)
-        if: matrix.platform == 'windows-x64'
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'macos'
         uses: actions/checkout@v5
         with:
           repository: redis/hiredis
@@ -448,6 +448,37 @@ jobs:
             nats-client-c-src/src/version.h
             nats-client-c-src/src/status.h
 
+      - name: Build Nats Client C - macOS (arm64)
+        if: matrix.platform == 'macos'
+        run: |
+          cd nats-client-c-src
+
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DNATS_BUILD_STREAMING=OFF \
+            -DNATS_BUILD_LIB_STATIC=ON \
+            -DNATS_BUILD_LIB_SHARED=OFF \
+            -DNATS_BUILD_EXAMPLES=OFF \
+            -DOPENSSL_ROOT_DIR="$GITHUB_WORKSPACE/openssl-macos" \
+            -DOPENSSL_CRYPTO_LIBRARY="$GITHUB_WORKSPACE/openssl-macos/lib/libcrypto.a" \
+            -DOPENSSL_SSL_LIBRARY="$GITHUB_WORKSPACE/openssl-macos/lib/libssl.a" \
+            -DCMAKE_OSX_ARCHITECTURES="arm64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }}
+
+          cmake --build build --target nats_static --config Release --parallel
+
+      - name: Upload NATS Client C Artifacts - macOS (arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nats-macos-arm64
+          if-no-files-found: error
+          path: |
+            nats-client-c-src/build/lib/libnats_static.a
+            nats-client-c-src/src/nats.h
+            nats-client-c-src/src/version.h
+            nats-client-c-src/src/status.h
+
       - name: Build hiredis - Windows (x64)
         if: matrix.platform == 'windows-x64'
         shell: cmd
@@ -482,6 +513,41 @@ jobs:
           path: |
             hiredis-src/build/Release/hiredis.lib
             hiredis-src/build/Release/hiredis_ssl.lib
+            hiredis-src/hiredis.h
+            hiredis-src/alloc.h
+            hiredis-src/read.h
+            hiredis-src/sds.h
+
+      - name: Build hiredis - macOS (arm64)
+        if: matrix.platform == 'macos'
+        run: |
+          cd hiredis-src
+
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DENABLE_SSL=ON \
+            -DDISABLE_TESTS=ON \
+            -DENABLE_EXAMPLES=OFF \
+            -DENABLE_NUGET=OFF \
+            -DOPENSSL_USE_STATIC_LIBS=ON \
+            -DOPENSSL_ROOT_DIR="$GITHUB_WORKSPACE/openssl-macos" \
+            -DOPENSSL_CRYPTO_LIBRARY="$GITHUB_WORKSPACE/openssl-macos/lib/libcrypto.a" \
+            -DOPENSSL_SSL_LIBRARY="$GITHUB_WORKSPACE/openssl-macos/lib/libssl.a" \
+            -DCMAKE_OSX_ARCHITECTURES="arm64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }}
+
+          cmake --build build --config Release --parallel
+
+      - name: Upload hiredis Artifacts - macOS (arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hiredis-macos-arm64
+          if-no-files-found: error
+          path: |
+            hiredis-src/build/libhiredis.a
+            hiredis-src/build/libhiredis_ssl.a
             hiredis-src/hiredis.h
             hiredis-src/alloc.h
             hiredis-src/read.h
