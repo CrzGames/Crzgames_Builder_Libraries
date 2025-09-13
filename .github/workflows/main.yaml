@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 env:
-  CMAKE_OSX_DEPLOYMENT_TARGET: "15.5"
-  IOS_DEPLOYMENT_TARGET: "18.5"
+  CMAKE_OSX_DEPLOYMENT_TARGET: "15.0"
+  IOS_DEPLOYMENT_TARGET: "18.0"
   ANDROID_API: "28"
   OPENSSL_TAG: "openssl-3.5.2"
   OPENSSL_APPLE_TAG: "3.3.3001"
@@ -903,7 +903,7 @@ jobs:
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
 
           mkdir -p build-onnxruntime build-onnxruntime/lib build-onnxruntime/include/onnxruntime
-          cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/lib/onnxruntime.a
+          cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/lib/libonnxruntime.a
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/onnxruntime
         shell: bash
 
