@@ -130,14 +130,6 @@ jobs:
           sudo apt install -y build-essential
         shell: bash
 
-      - name: Install Python3-pip for CMake - SteamRT4 (arm64)
-        if: matrix.platform == 'steamrt4-arm64'
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip
-          python3 -m pip install --upgrade pip
-        shell: bash
-
       - name: Setup Python (for ONNX Runtime) - All Platforms (except SteamRT4 arm64/x64)
         if: matrix.platform != 'steamrt4-arm64' && matrix.platform != 'steamrt4-x64'
         uses: actions/setup-python@v5
