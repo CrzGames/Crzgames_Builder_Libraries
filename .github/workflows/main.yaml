@@ -10,13 +10,13 @@ env:
   CMAKE_OSX_DEPLOYMENT_TARGET: "15.0"
   IOS_DEPLOYMENT_TARGET: "18.0"
   ANDROID_API: "28"
-  OPENSSL_TAG: "openssl-3.5.2"
-  OPENSSL_APPLE_TAG: "3.3.3001"
-  ONNXRUNTIME_TAG: "v1.22.2"
-  SDL_SHADERCROSS_TAG: "4ce748310f57d405b4eb2a79fbbc7e974d6491ec"
-  NATS_CLIENT_C_TAG: "v3.10.1"
+  OPENSSL_TAG: "openssl-3.6.0"
+  OPENSSL_APPLE_TAG: "3.6.0001"
+  ONNXRUNTIME_TAG: "v1.23.2"
+  SDL_SHADERCROSS_TAG: "7b7365a86611b2a7b6462e521cf1c43a037d0970"
+  NATS_CLIENT_C_TAG: "v3.12.0"
   HI_REDIS_TAG: "v1.3.0"
-  ANDROID_NDK_VERSION: "28.2.13676358"
+  ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
   XCODE_VERSION: "16.4.0"
@@ -50,16 +50,16 @@ jobs:
             os: ubuntu-22.04-arm
             platform: linux-arm64
             shell: bash
-          - name: Steam Linux Runtime 3.0 (Sniper) - SDK (x64)
+          - name: Steam Linux Runtime 4.0 - SDK (x64)
             os: ubuntu-latest
-            platform: slr3-sniper-x64
-            container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk:3.0.20250519.130773"
+            platform: steamrt4-x64
+            container: "registry.gitlab.steamos.cloud/steamrt/steamrt4/sdk:4.0.20260119.200228"
             shell: bash
-          #- name: Steam Linux Runtime 3.0 (Sniper) - SDK (arm64)
-          #  os: ubuntu-24.04-arm
-          #  platform: slr3-sniper-arm64
-          #  container: "registry.gitlab.steamos.cloud/steamrt/sniper/sdk/arm64:3.0.20250519.130773"
-          #  shell: bash
+          - name: Steam Linux Runtime 4.0 - SDK (arm64)
+            os: ubuntu-24.04-arm
+            platform: steamrt4-arm64
+            container: "registry.gitlab.steamos.cloud/steamrt/steamrt4/sdk/arm64:4.0.20260119.200228"
+            shell: bash
           - name: Ubuntu 24.04 (x64) for Android
             os: ubuntu-latest
             platform: android
@@ -149,63 +149,6 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: ${{ env.CMAKE_VERSION_OTHER }}
-
-      - name: Install GCC 14 Experimental (10 default) and Switch version GCC - SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
-        shell: bash
-        run: |
-          apt-get update
-          apt-get install -y gcc-14-monolithic
-          echo "PATH=/usr/lib/gcc-14/bin:$PATH" >> $GITHUB_ENV
-          echo "CC=/usr/lib/gcc-14/bin/gcc" >> $GITHUB_ENV
-          echo "CXX=/usr/lib/gcc-14/bin/g++" >> $GITHUB_ENV
-
-      - name: Build and install binutils 2.44 (for ONNX Runtime) - SLR3 Sniper (x64/arm64)
-        # Permet de fixé un probleme avec onnxruntime >= 1.22.0
-        # Issue github : https://github.com/microsoft/onnxruntime/issues/24653
-        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
-        run: |
-          wget https://ftp.gnu.org/gnu/binutils/binutils-2.44.tar.gz
-          tar -xf binutils-2.44.tar.gz
-          cd binutils-2.44
-          ./configure --prefix=/opt/binutils-2.44 --disable-werror
-          make -j$(nproc)
-          sudo make install
-          echo "/opt/binutils-2.44/bin" >> $GITHUB_PATH
-
-      - name: Compile Python from source (for ONNX Runtime) - SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'slr3-sniper-arm64' || matrix.platform == 'slr3-sniper-x64'
-        run: |
-          PYTHON_VERSION=${{ env.PYTHON_VERSION_SLR3 }}
-      
-          sudo apt-get update && sudo apt-get install -y \
-            build-essential \
-            libssl-dev \
-            zlib1g-dev \
-            libbz2-dev \
-            libreadline-dev \
-            libsqlite3-dev \
-            libncursesw5-dev \
-            xz-utils \
-            tk-dev \
-            libffi-dev \
-            wget
-      
-          cd /tmp
-          wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
-          tar -xzf Python-${PYTHON_VERSION}.tgz
-          cd Python-${PYTHON_VERSION}
-      
-          ./configure --prefix=$HOME/python-slr3-${PYTHON_VERSION} \
-                      --enable-optimizations \
-                      --with-lto \
-                      --with-ensurepip=install
-      
-          make -j$(nproc)
-          make install
-      
-          echo "$HOME/python-slr3-${PYTHON_VERSION}/bin" >> $GITHUB_PATH
-        shell: bash
 
       - name: Setup CMake (for ONNX Runtime) - Linux (arm64) / SLR3 Sniper (arm64) 
         # Obliger d'instaler CMake via pip pour Linux arm64, sinon erreur de compilation via :
