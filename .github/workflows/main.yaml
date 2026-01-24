@@ -23,7 +23,7 @@ env:
   PYTHON_VERSION_OTHER: "3.13"
   CMAKE_VERSION_MACOS: "3.31.0"
   CMAKE_VERSION_OTHER: "4.0.1"
-  CMAKE_VERSION_LINUX-STEAMRT4_ARM64: "4.0.0"
+  CMAKE_VERSION-LINUX_ARM64-STEAMRT4_ARM64: "4.0.0"
 
 jobs:
   build-libs:
@@ -154,7 +154,7 @@ jobs:
         # uses: jwlawson/actions-setup-cmake@v2
         if: matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-arm64'
         run: |
-          python3 -m pip install cmake==${{ env.CMAKE_VERSION_LINUX-STEAMRT4_ARM64 }}
+          python3 -m pip install cmake==${{ env.CMAKE_VERSION-LINUX_ARM64-STEAMRT4_ARM64 }}
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
