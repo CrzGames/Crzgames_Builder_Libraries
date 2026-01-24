@@ -125,14 +125,14 @@ jobs:
           ref: ${{ env.HI_REDIS_TAG }}
 
       - name: Setup Make (for OpenSSL / Python) - Linux (x64/arm64) / Android / SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'android' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'android' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
         run: |
           sudo apt update
           sudo apt install -y build-essential
         shell: bash
 
       - name: Setup Python (for ONNX Runtime) - All Platforms (except SLR3 Sniper arm64/x64)
-        if: matrix.platform != 'slr3-sniper-arm64' && matrix.platform != 'slr3-sniper-x64'
+        if: matrix.platform != 'steamrt4-arm64' && matrix.platform != 'steamrt4-x64'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION_OTHER }}
@@ -145,7 +145,7 @@ jobs:
           cmake-version: ${{ env.CMAKE_VERSION_MACOS }}
 
       - name: Setup CMake (for ONNX Runtime) - Windows (x64/arm64) / Linux (x64) / Android / SLR3 Sniper (x64)
-        if: matrix.platform != 'macos' && matrix.platform != 'ios' && matrix.platform != 'linux-arm64' && matrix.platform != 'slr3-sniper-arm64'
+        if: matrix.platform != 'macos' && matrix.platform != 'ios' && matrix.platform != 'linux-arm64' && matrix.platform != 'steamrt4-arm64'
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: ${{ env.CMAKE_VERSION_OTHER }}
@@ -153,20 +153,20 @@ jobs:
       - name: Setup CMake (for ONNX Runtime) - Linux (arm64) / SLR3 Sniper (arm64) 
         # Obliger d'instaler CMake via pip pour Linux arm64, sinon erreur de compilation via :
         # uses: jwlawson/actions-setup-cmake@v2
-        if: matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-arm64'
+        if: matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-arm64'
         run: |
           python3 -m pip install cmake==${{ env.CMAKE_VERSION_LINUX-SLR3_ARM64 }}
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
       - name: Setup Ninja (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64) / SLR3 Sniper (x64) / macOS (arm64)
-        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'linux-arm64' && matrix.platform != 'slr3-sniper-arm64' }}
+        if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'linux-arm64' && matrix.platform != 'steamrt4-arm64' }}
         uses: ashutoshvarma/setup-ninja@master
         with:
           version: 1.12.1
 
       - name: Install patchelf and libxrandr (for SDL3_shadercross) - Linux (x64/arm64) / SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
         run: |
           # patchelf est nécessaire pour corriger le chemin d'exécution de libSDL3.so.0
           # libxrandr-dev est nécessaire à vulkan-loader pour SDL3_shadercross
@@ -277,7 +277,7 @@ jobs:
           copy %ROOTDIR%\openssl-windows\arm64\lib\libssl.lib %ROOTDIR%\openssl-artifact-windows\arm64\lib\
         
       - name: Build OpenSSL - Linux (x64) / SLR3 Sniper (x64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'slr3-sniper-x64'
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'steamrt4-x64'
         run: |
           cd openssl-src
           mkdir -p build-output/x86_64/include
@@ -291,7 +291,7 @@ jobs:
         shell: bash
       
       - name: Build OpenSSL - Linux (arm64) / SLR3 Sniper (arm64)
-        if: matrix.platform == 'linux-arm64' || matrix.platform == 'slr3-sniper-arm64'
+        if: matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-arm64'
         run: |
           cd openssl-src
           mkdir -p build-output/arm64/include
@@ -702,7 +702,7 @@ jobs:
         shell: bash
 
       - name: Build ONNX Runtime - SLR3 Sniper (x64/arm64)
-        if: matrix.platform == 'slr3-sniper-x64' || matrix.platform == 'slr3-sniper-arm64'
+        if: matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
         run: |
           ./build.sh \
             --config Release \
@@ -872,17 +872,17 @@ jobs:
           path: openssl-android/
 
       - name: Upload OpenSSL Artifacts - SLR3 Sniper (x64)
-        if: matrix.platform == 'slr3-sniper-x64'
+        if: matrix.platform == 'steamrt4-x64'
         uses: actions/upload-artifact@v4
         with:
-          name: openssl-slr3-sniper-x64
+          name: openssl-steamrt4-x64
           path: openssl-src/build-output/x86_64
       
       - name: Upload OpenSSL Artifacts - SLR3 Sniper (arm64)
-        if: matrix.platform == 'slr3-sniper-arm64'
+        if: matrix.platform == 'steamrt4-arm64'
         uses: actions/upload-artifact@v4
         with:
-          name: openssl-slr3-sniper-arm64
+          name: openssl-steamrt4-arm64
           path: openssl-src/build-output/arm64
 
       - name: Upload OpenSSL Artifacts - Linux (x64)
@@ -942,17 +942,17 @@ jobs:
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - SLR3 Sniper (x64)
-        if: matrix.platform == 'slr3-sniper-x64'
+        if: matrix.platform == 'steamrt4-x64'
         uses: actions/upload-artifact@v4
         with:
-          name: onnxruntime-slr3-sniper-x64
+          name: onnxruntime-steamrt4-x64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - SLR3 Sniper (arm64)
-        if: matrix.platform == 'slr3-sniper-arm64'
+        if: matrix.platform == 'steamrt4-arm64'
         uses: actions/upload-artifact@v4
         with:
-          name: onnxruntime-slr3-sniper-arm64
+          name: onnxruntime-steamrt4-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Android (arm64-v8a / armeabi-v7a)
@@ -1022,10 +1022,10 @@ jobs:
 
           # SLR3 Sniper (x64 / arm64)
           mkdir -p merged/slr3-sniper/include merged/slr3-sniper/lib/x64 merged/slr3-sniper/lib/arm64
-          cp -a temp/openssl-slr3-sniper-x64/include/* merged/slr3-sniper/include/
-          cp -a temp/openssl-slr3-sniper-x64/lib/* merged/slr3-sniper/lib/x64/
-          cp -a temp/openssl-slr3-sniper-arm64/include/* merged/slr3-sniper/include/
-          cp -a temp/openssl-slr3-sniper-arm64/lib/* merged/slr3-sniper/lib/arm64/
+          cp -a temp/openssl-steamrt4-x64/include/* merged/slr3-sniper/include/
+          cp -a temp/openssl-steamrt4-x64/lib/* merged/slr3-sniper/lib/x64/
+          cp -a temp/openssl-steamrt4-arm64/include/* merged/slr3-sniper/include/
+          cp -a temp/openssl-steamrt4-arm64/lib/* merged/slr3-sniper/lib/arm64/
 
 
           # ------- ONNX Runtime ---------
@@ -1051,10 +1051,10 @@ jobs:
 
           # SLR3 Sniper (x64 / arm64)
           mkdir -p merged2/slr3-sniper/include merged2/slr3-sniper/lib/x64 merged2/slr3-sniper/lib/arm64
-          cp -a temp/onnxruntime-slr3-sniper-x64/include/* merged2/slr3-sniper/include/
-          cp -a temp/onnxruntime-slr3-sniper-x64/lib/* merged2/slr3-sniper/lib/x64/
-          cp -a temp/onnxruntime-slr3-sniper-arm64/include/* merged2/slr3-sniper/include/
-          cp -a temp/onnxruntime-slr3-sniper-arm64/lib/* merged2/slr3-sniper/lib/arm64/
+          cp -a temp/onnxruntime-steamrt4-x64/include/* merged2/slr3-sniper/include/
+          cp -a temp/onnxruntime-steamrt4-x64/lib/* merged2/slr3-sniper/lib/x64/
+          cp -a temp/onnxruntime-steamrt4-arm64/include/* merged2/slr3-sniper/include/
+          cp -a temp/onnxruntime-steamrt4-arm64/lib/* merged2/slr3-sniper/lib/arm64/
 
           # macOS (arm64)
           mkdir -p merged2/macos/include merged2/macos/lib
@@ -1089,10 +1089,10 @@ jobs:
 
           # SLR3 Sniper (x64 / arm64)
           mkdir -p merged4/slr3-sniper/include merged4/slr3-sniper/lib/x64 merged4/slr3-sniper/lib/arm64
-          cp -a temp/sdl3_shadercross-slr3-sniper-x64/include/* merged4/slr3-sniper/include/
-          cp -a temp/sdl3_shadercross-slr3-sniper-x64/lib/* merged4/slr3-sniper/lib/x64/
-          cp -a temp/sdl3_shadercross-slr3-sniper-arm64/include/* merged4/slr3-sniper/include/
-          cp -a temp/sdl3_shadercross-slr3-sniper-arm64/lib/* merged4/slr3-sniper/lib/arm64/
+          cp -a temp/sdl3_shadercross-steamrt4-x64/include/* merged4/slr3-sniper/include/
+          cp -a temp/sdl3_shadercross-steamrt4-x64/lib/* merged4/slr3-sniper/lib/x64/
+          cp -a temp/sdl3_shadercross-steamrt4-arm64/include/* merged4/slr3-sniper/include/
+          cp -a temp/sdl3_shadercross-steamrt4-arm64/lib/* merged4/slr3-sniper/lib/arm64/
 
           # macOS (arm64)
           mkdir -p merged4/macos/include merged4/macos/lib/arm64
