@@ -155,7 +155,7 @@ jobs:
         if: matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-arm64'
         run: |
           if ! python3 -m pip --version >/dev/null 2>&1; then
-            sudo apt install -y python3-pip python3-venv
+            sudo apt install -y python3-full
           fi
           python3 -m pip install cmake==${{ env.CMAKE_VERSION-LINUX_ARM64-STEAMRT4_ARM64 }}
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
