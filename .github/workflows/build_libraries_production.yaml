@@ -1,9 +1,12 @@
 name: Build ONNX Runtime, OpenSSL, SDL3_shadercross, NATS Client C, hiredis Libraries
 
+permissions:
+  contents: write
+
 on:
-  push:
-    branches:
-      - main
+  release:
+    types:
+      - published
   workflow_dispatch:
 
 env:
