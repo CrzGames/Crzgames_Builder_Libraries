@@ -150,15 +150,19 @@ jobs:
           cmake-version: ${{ env.CMAKE_VERSION_OTHER }}
 
       - name: Setup CMake (for ONNX Runtime) - Linux (arm64) / SteamRT4 (arm64) 
-        # Obliger d'instaler CMake via pip pour Linux arm64 et SteamRT4 arm64, sinon erreur de compilation via :
+        # Obliger d'instaler CMake via pip pour Linux arm64, sinon erreur de compilation via :
         # uses: jwlawson/actions-setup-cmake@v2
         if: matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-arm64'
         run: |
-          if ! python3 -m pip --version >/dev/null 2>&1; then
+          if [[ "${{ matrix.platform }}" == "steamrt4-arm64" ]]; then
             sudo apt install -y python3-full
+            python3 -m venv /tmp/cmake-venv
+            /tmp/cmake-venv/bin/pip install cmake==${{ env.CMAKE_VERSION-LINUX_ARM64-STEAMRT4_ARM64 }}
+            echo "/tmp/cmake-venv/bin" >> $GITHUB_PATH
+          else
+            python3 -m pip install --user cmake==${{ env.CMAKE_VERSION-LINUX_ARM64-STEAMRT4_ARM64 }}
+            echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
           fi
-          python3 -m pip install cmake==${{ env.CMAKE_VERSION-LINUX_ARM64-STEAMRT4_ARM64 }}
-          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
 
       - name: Setup Ninja (for SDL3_shadercross) - Windows (x64/arm64) / Linux (x64) / SteamRT4 (x64) / macOS (arm64)
