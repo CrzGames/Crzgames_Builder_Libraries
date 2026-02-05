@@ -1,8 +1,8 @@
 # Crzgames Builder Libraries
 
 ## Informations repository
-Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2DCore qui sont sois beaucoup trop longue ou sois pas possible dans un CMakeLists.txt. <br />
-Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
+Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2D qui sont sois beaucoup trop longue ou sois pas possible dans un CMakeLists.txt. <br />
+Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hiredis, NATS Client C.<br /><br />
 
 <br />
 
@@ -15,8 +15,8 @@ Les bibliothèques : OpenSSL, ONNX Runtime et SDL3_shadercross. <br /><br />
 | **Onnx Runtime** | v1.23.2 |
 | **OpenSSL** | v3.6.0 |
 | **SDL3_shadercross** | commit_sha: 7b7365a86611b2a7b6462e521cf1c43a037d0970 |
-| **NATS Client C (windows-x64)** | v3.12.0 |
-| **hiredis (windows-x64)** | v1.3.0 |
+| **NATS Client C** | v3.12.0 |
+| **hiredis** | v1.3.0 |
 
 <br />
 
