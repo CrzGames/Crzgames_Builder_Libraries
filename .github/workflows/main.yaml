@@ -150,10 +150,13 @@ jobs:
           cmake-version: ${{ env.CMAKE_VERSION_OTHER }}
 
       - name: Setup CMake (for ONNX Runtime) - Linux (arm64) / SteamRT4 (arm64) 
-        # Obliger d'instaler CMake via pip pour Linux arm64, sinon erreur de compilation via :
+        # Obliger d'instaler CMake via pip pour Linux arm64 et SteamRT4 arm64, sinon erreur de compilation via :
         # uses: jwlawson/actions-setup-cmake@v2
         if: matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-arm64'
         run: |
+          if ! python3 -m pip --version >/dev/null 2>&1; then
+            sudo apt install -y python3-pip
+          fi
           python3 -m pip install cmake==${{ env.CMAKE_VERSION-LINUX_ARM64-STEAMRT4_ARM64 }}
           echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
         shell: bash
@@ -1021,11 +1024,11 @@ jobs:
           cp -a temp/openssl-android/armeabi-v7a/lib/* merged/android/lib/armeabi-v7a/
 
           # SteamRT4 (x64 / arm64)
-          mkdir -p merged/slr3-sniper/include merged/slr3-sniper/lib/x64 merged/slr3-sniper/lib/arm64
-          cp -a temp/openssl-steamrt4-x64/include/* merged/slr3-sniper/include/
-          cp -a temp/openssl-steamrt4-x64/lib/* merged/slr3-sniper/lib/x64/
-          cp -a temp/openssl-steamrt4-arm64/include/* merged/slr3-sniper/include/
-          cp -a temp/openssl-steamrt4-arm64/lib/* merged/slr3-sniper/lib/arm64/
+          mkdir -p merged/steamrt4/include merged/steamrt4/lib/x64 merged/steamrt4/lib/arm64
+          cp -a temp/openssl-steamrt4-x64/include/* merged/steamrt4/include/
+          cp -a temp/openssl-steamrt4-x64/lib/* merged/steamrt4/lib/x64/
+          cp -a temp/openssl-steamrt4-arm64/include/* merged/steamrt4/include/
+          cp -a temp/openssl-steamrt4-arm64/lib/* merged/steamrt4/lib/arm64/
 
 
           # ------- ONNX Runtime ---------
@@ -1050,11 +1053,11 @@ jobs:
           cp -a temp/onnxruntime-android/armeabi-v7a/lib/* merged2/android/lib/armeabi-v7a/
 
           # SteamRT4 (x64 / arm64)
-          mkdir -p merged2/slr3-sniper/include merged2/slr3-sniper/lib/x64 merged2/slr3-sniper/lib/arm64
-          cp -a temp/onnxruntime-steamrt4-x64/include/* merged2/slr3-sniper/include/
-          cp -a temp/onnxruntime-steamrt4-x64/lib/* merged2/slr3-sniper/lib/x64/
-          cp -a temp/onnxruntime-steamrt4-arm64/include/* merged2/slr3-sniper/include/
-          cp -a temp/onnxruntime-steamrt4-arm64/lib/* merged2/slr3-sniper/lib/arm64/
+          mkdir -p merged2/steamrt4/include merged2/steamrt4/lib/x64 merged2/steamrt4/lib/arm64
+          cp -a temp/onnxruntime-steamrt4-x64/include/* merged2/steamrt4/include/
+          cp -a temp/onnxruntime-steamrt4-x64/lib/* merged2/steamrt4/lib/x64/
+          cp -a temp/onnxruntime-steamrt4-arm64/include/* merged2/steamrt4/include/
+          cp -a temp/onnxruntime-steamrt4-arm64/lib/* merged2/steamrt4/lib/arm64/
 
           # macOS (arm64)
           mkdir -p merged2/macos/include merged2/macos/lib
@@ -1088,11 +1091,11 @@ jobs:
           cp -a temp/sdl3_shadercross-android-arm64v8a_armeabiv7a/armeabi-v7a/lib/* merged4/android/lib/armeabi-v7a/
 
           # SteamRT4 (x64 / arm64)
-          mkdir -p merged4/slr3-sniper/include merged4/slr3-sniper/lib/x64 merged4/slr3-sniper/lib/arm64
-          cp -a temp/sdl3_shadercross-steamrt4-x64/include/* merged4/slr3-sniper/include/
-          cp -a temp/sdl3_shadercross-steamrt4-x64/lib/* merged4/slr3-sniper/lib/x64/
-          cp -a temp/sdl3_shadercross-steamrt4-arm64/include/* merged4/slr3-sniper/include/
-          cp -a temp/sdl3_shadercross-steamrt4-arm64/lib/* merged4/slr3-sniper/lib/arm64/
+          mkdir -p merged4/steamrt4/include merged4/steamrt4/lib/x64 merged4/steamrt4/lib/arm64
+          cp -a temp/sdl3_shadercross-steamrt4-x64/include/* merged4/steamrt4/include/
+          cp -a temp/sdl3_shadercross-steamrt4-x64/lib/* merged4/steamrt4/lib/x64/
+          cp -a temp/sdl3_shadercross-steamrt4-arm64/include/* merged4/steamrt4/include/
+          cp -a temp/sdl3_shadercross-steamrt4-arm64/lib/* merged4/steamrt4/lib/arm64/
 
           # macOS (arm64)
           mkdir -p merged4/macos/include merged4/macos/lib/arm64
@@ -1110,19 +1113,19 @@ jobs:
           zip -r ../openssl-linux.zip linux/*
           zip -r ../openssl-windows.zip windows/*
           zip -r ../openssl-android.zip android/*
-          zip -r ../openssl-slr3-sniper.zip slr3-sniper/*
+          zip -r ../openssl-steamrt4.zip steamrt4/*
           cd ../merged2
           zip -r ../onnxruntime-linux.zip linux/*
           zip -r ../onnxruntime-windows.zip windows/*
           zip -r ../onnxruntime-android.zip android/*
-          zip -r ../onnxruntime-slr3-sniper.zip slr3-sniper/*
+          zip -r ../onnxruntime-steamrt4.zip steamrt4/*
           zip -r ../onnxruntime-macos.zip macos/*
           zip -r ../onnxruntime-ios.zip ios/*
           cd ../merged4
           zip -r ../sdl_shadercross-linux.zip linux/*
           zip -r ../sdl_shadercross-windows.zip windows/*
           zip -r ../sdl_shadercross-android.zip android/*
-          zip -r ../sdl_shadercross-slr3-sniper.zip slr3-sniper/*
+          zip -r ../sdl_shadercross-steamrt4.zip steamrt4/*
           zip -r ../sdl_shadercross-macos.zip macos/*
           zip -r ../sdl_shadercross-ios.zip ios/*
 
@@ -1149,17 +1152,17 @@ jobs:
             openssl-linux.zip
             openssl-windows.zip
             openssl-android.zip
-            openssl-slr3-sniper.zip
+            openssl-steamrt4.zip
             onnxruntime-linux.zip
             onnxruntime-windows.zip
             onnxruntime-android.zip
-            onnxruntime-slr3-sniper.zip
+            onnxruntime-steamrt4.zip
             onnxruntime-macos.zip
             onnxruntime-ios.zip
             sdl_shadercross-linux.zip
             sdl_shadercross-windows.zip
             sdl_shadercross-android.zip
-            sdl_shadercross-slr3-sniper.zip
+            sdl_shadercross-steamrt4.zip
             sdl_shadercross-macos.zip
             sdl_shadercross-ios.zip
           body_path: release_notes.md
