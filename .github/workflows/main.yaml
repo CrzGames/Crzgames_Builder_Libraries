@@ -19,7 +19,7 @@ env:
   ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
   JAVA_VERSION: "17"
-  XCODE_VERSION: "16.4.0"
+  XCODE_VERSION: "26.2.0"
   PYTHON_VERSION_OTHER: "3.13"
   CMAKE_VERSION_MACOS: "3.31.0"
   CMAKE_VERSION_OTHER: "4.0.1"
@@ -64,12 +64,12 @@ jobs:
             platform: android
             shell: bash
           - name: macOS (arm64)
-            os: macos-15
+            os: macos-26
             platform: macos
             sdk: macosx
             shell: bash
           - name: macOS (arm64) for iOS arm64
-            os: macos-15
+            os: macos-26
             platform: ios
             sdk: iphoneos
             shell: bash
