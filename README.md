@@ -56,6 +56,13 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 | **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 (Sniper) | ✓ |
 | **Steam Deck** | x64 | Steam Linux Runtime 4.0 (Sniper) | ✓ |
 
+## 📋 Plateforme supportés - hiredis / Nats Client C (seulement pour Windows / macOS, puisque Linux est facilement compilable pour un serveur de jeu) :
+
+| Platform | Architectures | System Version | Compatible |
+|----------|---------------|----------------|------------|
+| **Windows** | x64 | Windows 10+  | ✓           |
+| **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
+
 <br />
 
 ---

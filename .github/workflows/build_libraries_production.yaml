@@ -1068,13 +1068,13 @@ jobs:
 
           # macOS (arm64)
           mkdir -p merged2/macos/include merged2/macos/lib
-          cp -a temp/onnxruntime-macos/include/* merged2/macos/include/
-          cp -a temp/onnxruntime-macos/lib/* merged2/macos/lib/
+          cp -a temp/onnxruntime-macos-arm64/include/* merged2/macos/include/
+          cp -a temp/onnxruntime-macos-arm64/lib/* merged2/macos/lib/
 
           # iOS (arm64)
           mkdir -p merged2/ios/include merged2/ios/lib
-          cp -a temp/onnxruntime-ios/include/* merged2/ios/include/
-          cp -a temp/onnxruntime-ios/lib/* merged2/ios/lib/
+          cp -a temp/onnxruntime-ios-arm64/include/* merged2/ios/include/
+          cp -a temp/onnxruntime-ios-arm64/lib/* merged2/ios/lib/
 
           # ------- SDL3_shadercross ---------
           # Linux (x64 / arm64)
