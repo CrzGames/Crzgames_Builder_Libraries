@@ -21,6 +21,7 @@ env:
   HI_REDIS_TAG: "v1.3.0"
   ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
+  JAVA_DISTRIBUTION: "temurin"
   JAVA_VERSION: "17"
   XCODE_VERSION: "26.2.0"
   PYTHON_VERSION_OTHER: "3.13"
@@ -219,7 +220,7 @@ jobs:
         if: matrix.platform == 'android'
         uses: actions/setup-java@v5
         with:
-          distribution: 'oracle'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Setup SDK Manager for Platforms and NDK - Android
