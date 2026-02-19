@@ -12,8 +12,8 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 
 | Librarie | Tag/Version |
 |----------|---------|
-| **Onnx Runtime** | v1.23.2 |
-| **OpenSSL** | v3.6.0 |
+| **Onnx Runtime** | v1.24.1 |
+| **OpenSSL** | v3.6.1 |
 | **SDL3_shadercross** | commit_sha: 7b7365a86611b2a7b6462e521cf1c43a037d0970 |
 | **NATS Client C** | v3.12.0 |
 | **hiredis** | v1.3.0 |
