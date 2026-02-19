@@ -43,8 +43,8 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 | **iOS/iPadOS** | arm64 (iphoneos) - not iphonesimulator | iOS ?+ | ✓ |
 | **Android** | arm64-v8a / armeabi-v7a | Android 9.0+ | ✓ |
 | **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
-| **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 (Sniper) | ✓ |
-| **Steam Deck** | x64 | Steam Linux Runtime 4.0 (Sniper) | ✓ |
+| **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 | ✓ |
+| **Steam Deck** | x64 | Steam Linux Runtime 4.0  | ✓ |
 
 ## 📋 Plateforme supportés - SDL3_shadercross :
 
@@ -53,8 +53,8 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 | **Windows** | x64 / arm64 | Windows 10+  | ✓           |
 | **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
 | **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
-| **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 (Sniper) | ✓ |
-| **Steam Deck** | x64 | Steam Linux Runtime 4.0 (Sniper) | ✓ |
+| **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 | ✓ |
+| **Steam Deck** | x64 | Steam Linux Runtime 4.0 | ✓ |
 
 ## 📋 Plateforme supportés - hiredis / Nats Client C (seulement pour Windows / macOS, puisque Linux est facilement compilable pour un serveur de jeu) :
 
@@ -88,7 +88,7 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 - Windows x64 : Fallback sur XNN si pas Direct3D12 (Execution Providers)
 - Windows arm64 : Fallback sur XNN impossible puisque quand on lui passe l'argument cela plante avec XNN, donc arm64 aura que DirectML.
 
-#### Linux / Steam Linux Runtime 4.0 (Sniper) :
+#### Linux / Steam Linux Runtime 4.0 :
 - Linux x64/arm64 possible.
 - XNN (Execution Providers)
 - GCC >= 11.1
