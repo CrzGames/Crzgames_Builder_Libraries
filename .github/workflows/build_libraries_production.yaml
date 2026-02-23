@@ -516,7 +516,7 @@ jobs:
           shell: sh
           install-linux-dependencies: true
           discriminator: ${{ matrix.platform }}
-          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }} -DCMAKE_C_FLAGS="-mmacosx-version-min=${{ env.MACOS_TARGET_MIN_VERSION_OS }}" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=${{ env.MACOS_TARGET_MIN_VERSION_OS }}"' || '' }}
+          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
   
       - name: Build SDL3 from source - Windows (arm64)
         # setup-sdl ne fonctionne pas sur Windows arm64
