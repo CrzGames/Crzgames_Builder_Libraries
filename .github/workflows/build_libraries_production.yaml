@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 env:
-  CMAKE_OSX_DEPLOYMENT_TARGET: "15.0"
-  IOS_DEPLOYMENT_TARGET: "18.0"
+  MACOS_TARGET_MIN_VERSION_OS: "15.0" # C'est la version minimale ciblé pour macOS
+  IOS_TARGET_MIN_VERSION_OS: "18.0" # C'est la version minimale ciblé pour iOS
   ANDROID_API: "28"
   OPENSSL_TAG: "openssl-3.6.1"
   OPENSSL_APPLE_TAG: "3.6.0001"
@@ -416,7 +416,7 @@ jobs:
             -DOPENSSL_CRYPTO_LIBRARY="$GITHUB_WORKSPACE/openssl-macos/lib/libcrypto.a" \
             -DOPENSSL_SSL_LIBRARY="$GITHUB_WORKSPACE/openssl-macos/lib/libssl.a" \
             -DCMAKE_OSX_ARCHITECTURES="arm64" \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }}
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }}
 
           cmake --build build --target nats_static --config Release --parallel
 
@@ -488,7 +488,7 @@ jobs:
             -DOPENSSL_CRYPTO_LIBRARY="$GITHUB_WORKSPACE/openssl-macos/lib/libcrypto.a" \
             -DOPENSSL_SSL_LIBRARY="$GITHUB_WORKSPACE/openssl-macos/lib/libssl.a" \
             -DCMAKE_OSX_ARCHITECTURES="arm64" \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }}
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }}
 
           cmake --build build --config Release --parallel
 
@@ -516,7 +516,7 @@ jobs:
           shell: sh
           install-linux-dependencies: true
           discriminator: ${{ matrix.platform }}
-          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
+          cmake-arguments: ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }} -DCMAKE_C_FLAGS="-mmacosx-version-min=${{ env.MACOS_TARGET_MIN_VERSION_OS }}" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=${{ env.MACOS_TARGET_MIN_VERSION_OS }}"' || '' }}
   
       - name: Build SDL3 from source - Windows (arm64)
         # setup-sdl ne fonctionne pas sur Windows arm64
@@ -603,7 +603,7 @@ jobs:
             -DSDLSHADERCROSS_INSTALL=ON \
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
             -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
-            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
+            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }} -DCMAKE_C_FLAGS="-mmacosx-version-min=${{ env.MACOS_TARGET_MIN_VERSION_OS }}" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=${{ env.MACOS_TARGET_MIN_VERSION_OS }}"' || '' }}
         
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
@@ -814,7 +814,6 @@ jobs:
             --config Release \
             --use_coreml \
             --build_shared_lib \
-            --apple_deploy_target ${{ env.CMAKE_OSX_DEPLOYMENT_TARGET }} \
             --parallel \
             --compile_no_warning_as_error \
             --skip_submodule_sync \
@@ -823,6 +822,7 @@ jobs:
             --skip_tests \
             --cmake_extra_defines \
               CMAKE_OSX_ARCHITECTURES=arm64 \
+              CMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }} \
               onnxruntime_BUILD_UNIT_TESTS=OFF
 
           ROOTDIR=$(pwd)
@@ -851,7 +851,7 @@ jobs:
             --apple_sysroot iphoneos \
             --osx_arch arm64 \
             --build_apple_framework \
-            --apple_deploy_target ${{ env.IOS_DEPLOYMENT_TARGET }} \
+            --apple_deploy_target ${{ env.IOS_TARGET_MIN_VERSION_OS }} \
             --skip_submodule_sync \
             --skip_tests \
             --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
