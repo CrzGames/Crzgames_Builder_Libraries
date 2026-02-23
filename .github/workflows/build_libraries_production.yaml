@@ -602,7 +602,7 @@ jobs:
             -DSDLSHADERCROSS_INSTALL=ON \
             -DSDLSHADERCROSS_INSTALL_RUNTIME=ON \
             -DCMAKE_INSTALL_PREFIX="${PWD}/prefix" \
-            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }} -DCMAKE_C_FLAGS="-mmacosx-version-min=${{ env.MACOS_TARGET_MIN_VERSION_OS }}" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=${{ env.MACOS_TARGET_MIN_VERSION_OS }}"' || '' }}
+            ${{ matrix.platform == 'macos' && '-DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 -DCMAKE_C_FLAGS="-mmacosx-version-min=15.0" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=15.0"' || '' }}
         
           cmake --build build --config Release --parallel --verbose
           cmake --install build --config Release
