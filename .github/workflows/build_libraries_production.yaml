@@ -13,7 +13,7 @@ env:
   MACOS_TARGET_MIN_VERSION_OS: "15.0" # C'est la version minimale ciblé pour macOS
   IOS_TARGET_MIN_VERSION_OS: "18.0" # C'est la version minimale ciblé pour iOS
   ANDROID_API: "28"
-  LIBSODIUM_TAG: "1.0.21-Release"
+  LIBSODIUM_TAG: "1.0.21-RELEASE"
   OPENSSL_TAG: "openssl-3.6.1"
   OPENSSL_APPLE_TAG: "3.6.0001"
   ONNXRUNTIME_TAG: "v1.24.2"
