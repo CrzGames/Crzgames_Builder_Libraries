@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.0.2...v1.1.0) (2026-02-26)
+
+
+### Features
+
+* add libsodium ([1e30348](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/1e303489484102e2edf8f6a3e0a1a90f04887a45))
+
+
+### Bug Fixes
+
+* fixed distribution java ([f79965a](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/f79965a50c1cf16f5992df642bbe1bedca729045))
+* fixed onnxruntime os min for macos ([b887b53](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/b887b534bc1af7895f55d830bc25977679e86b18))
+
 ## [1.0.2](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.0.1...v1.0.2) (2026-02-13)
 
 
