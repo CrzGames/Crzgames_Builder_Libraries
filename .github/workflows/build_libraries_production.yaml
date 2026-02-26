@@ -246,21 +246,24 @@ jobs:
           packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
 
-      - name: Build libsodium - Linux / SteamRT4 (x64/arm64)
+      - name: Build libsodium (static) - Linux / SteamRT4 (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
         shell: bash
         run: |
           set -euxo pipefail
           cd libsodium-src
-
-          # Build + staged install
           mkdir -p build && cd build
+
+          # Fix aarch64 (GCC/Clang) : activer crypto/aes
+          if [[ "${{ matrix.platform }}" == "linux-arm64" || "${{ matrix.platform }}" == "steamrt4-arm64" ]]; then
+            export CFLAGS="${CFLAGS:-} -march=armv8-a+crypto+aes"
+          fi
+
           ../configure --disable-shared --enable-static --prefix=/usr/local
           make -j"$(nproc)"
           make install DESTDIR="$PWD/stage"
 
           ROOT="$GITHUB_WORKSPACE"
-          # arch mapping
           if [[ "${{ matrix.platform }}" == "linux-x64" || "${{ matrix.platform }}" == "steamrt4-x64" ]]; then
             ARCHDIR="x86_64"
           else
@@ -269,46 +272,56 @@ jobs:
 
           OUT="$ROOT/libsodium-artifact-${{ matrix.platform }}"
           mkdir -p "$OUT/include" "$OUT/lib/$ARCHDIR"
-
-          # headers
           cp -a "$PWD/stage/usr/local/include/"* "$OUT/include/"
-
-          # lib static
           LIBA="$(find "$PWD/stage" -name "libsodium.a" -print -quit)"
           test -n "$LIBA"
           cp -a "$LIBA" "$OUT/lib/$ARCHDIR/libsodium.a"
 
-          echo "Built libsodium: $OUT"
-
-      - name: Build libsodium - Android (arm64-v8a / armeabi-v7a) static
+      - name: Build libsodium (static) - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
         shell: bash
         run: |
           set -euxo pipefail
           cd libsodium-src
 
-          # Build toutes les arch Android (script officiel)
-          ./dist-build/android-aar.sh
+          # Nettoyage pour éviter mélange entre arch
+          make distclean >/dev/null 2>&1 || true
+          rm -rf libsodium-android-* >/dev/null 2>&1 || true
+
+          # Build armeabi-v7a (ARMv7-A)
+          ./dist-build/android-armv7-a.sh
+
+          # Build arm64-v8a (ARMv8-A)
+          ./dist-build/android-armv8-a.sh
 
           ROOT="$GITHUB_WORKSPACE"
           OUT="$ROOT/libsodium-android"
-          mkdir -p "$OUT/include" "$OUT/lib/arm64-v8a" "$OUT/lib/armeabi-v7a"
+          mkdir -p "$OUT/include" "$OUT/lib/armeabi-v7a" "$OUT/lib/arm64-v8a"
 
-          # Headers: ils se retrouvent dans les dossiers générés; on prend le premier include trouvé
-          INC="$(find . -maxdepth 3 -type d -name include -path "*libsodium-android-*" | head -n 1)"
+          # Headers: on prend un include généré (en général identique pour les deux)
+          INC="$(find . -type d -name include -path "*libsodium-android-*" | head -n 1)"
           test -n "$INC"
           cp -a "$INC/"* "$OUT/include/"
 
-          # Libs statiques par ABI (on “find” pour être robuste)
-          LIB64="$(find . -type f -name "libsodium.a" -path "*arm64-v8a*" | head -n 1)"
-          LIB32="$(find . -type f -name "libsodium.a" -path "*armeabi-v7a*" | head -n 1)"
-          test -n "$LIB64"
+          # Libs statiques: on cherche les libsodium.a produites par chaque build
+          LIB32="$(find . -type f -name "libsodium.a" | grep -Ei '(armv7|armeabi|android.*arm[^6]?)' | head -n 1 || true)"
+          LIB64="$(find . -type f -name "libsodium.a" | grep -Ei '(arm64|aarch64|armv8|v8a)' | head -n 1 || true)"
+
+          # Fallback (si grep rate selon layout)
+          if [[ -z "$LIB32" ]]; then
+            LIB32="$(find . -type f -name "libsodium.a" -path "*android*arm*/*" | head -n 1 || true)"
+          fi
+          if [[ -z "$LIB64" ]]; then
+            LIB64="$(find . -type f -name "libsodium.a" -path "*android*arm64*/*" | head -n 1 || true)"
+          fi
+
           test -n "$LIB32"
+          test -n "$LIB64"
 
-          cp -a "$LIB64" "$OUT/lib/arm64-v8a/libsodium.a"
           cp -a "$LIB32" "$OUT/lib/armeabi-v7a/libsodium.a"
+          cp -a "$LIB64" "$OUT/lib/arm64-v8a/libsodium.a"
 
-          echo "Built libsodium android => $OUT"
+          echo "Android libsodium ready at: $OUT"
 
       - name: Build libsodium (XCFramework + extract iOS(iphoneos arm64) + macOS(arm64) static libs) - macOS (arm64) / iOS (arm64)
         if: matrix.platform == 'macos'
@@ -317,50 +330,43 @@ jobs:
           set -euxo pipefail
           cd libsodium-src
 
-          # Build XCFramework (multi-plateformes)
+          # Optionnel: skip simulateurs (plus rapide, et toi tu n'en veux pas)
+          export LIBSODIUM_SKIP_SIMULATORS=1
+
+          # Respecter tes targets min OS
+          export MACOS_VERSION_MIN="${{ env.MACOS_TARGET_MIN_VERSION_OS }}"
+          export IOS_VERSION_MIN="${{ env.IOS_TARGET_MIN_VERSION_OS }}"
+
           ./dist-build/apple-xcframework.sh
 
-          XCFW="$(find . -maxdepth 4 -type d -name "*.xcframework" | head -n 1)"
-          test -n "$XCFW"
+          ROOT="$GITHUB_WORKSPACE"
+          PREFIX="$PWD/libsodium-apple"   # c'est ce que le script définit comme PREFIX
+          XCFW="$PREFIX/Clibsodium.xcframework"
+          test -d "$XCFW"
           echo "XCFramework: $XCFW"
 
-          ROOT="$GITHUB_WORKSPACE"
-
+          # Output dirs
           OUT_IOS="$ROOT/libsodium-ios"
           OUT_MAC="$ROOT/libsodium-macos"
           mkdir -p "$OUT_IOS/include" "$OUT_IOS/lib"
           mkdir -p "$OUT_MAC/include" "$OUT_MAC/lib/arm64"
 
           # ---- iOS device arm64 (iphoneos) ----
-          # On cible un slice qui contient typiquement "ios-arm64" OU "iphoneos"
-          IOS_LIB="$(find "$XCFW" -type f -name "libsodium.a" | grep -Ei '(ios-arm64|iphoneos)' | head -n 1)"
-          test -n "$IOS_LIB"
-          echo "iOS lib: $IOS_LIB"
-          cp -a "$IOS_LIB" "$OUT_IOS/lib/libsodium.a"
-
-          # Headers iOS: on essaie Headers/ puis include/, sinon fallback repo
-          IOS_SLICE_DIR="$(cd "$(dirname "$IOS_LIB")" && pwd)"
-          IOS_HDR="$(find "$IOS_SLICE_DIR" -maxdepth 4 -type d -name Headers | head -n 1 || true)"
-          IOS_INC="$(find "$IOS_SLICE_DIR" -maxdepth 4 -type d -name include  | head -n 1 || true)"
-
-          if [[ -n "$IOS_HDR" ]]; then
-            cp -a "$IOS_HDR/"* "$OUT_IOS/include/"
-          elif [[ -n "$IOS_INC" ]]; then
-            cp -a "$IOS_INC/"* "$OUT_IOS/include/"
-          else
-            cp -a "$ROOT/libsodium-src/src/libsodium/include/"* "$OUT_IOS/include/"
-          fi
+          # On préfère récupérer directement depuis PREFIX/ios (bundle interne)
+          test -f "$PREFIX/ios/lib/libsodium.a"
+          cp -a "$PREFIX/ios/lib/libsodium.a" "$OUT_IOS/lib/libsodium.a"
+          cp -a "$PREFIX/ios/include/"* "$OUT_IOS/include/"
 
           # ---- macOS arm64 ----
-          # On cible un slice qui contient typiquement "macos-arm64"
-          MAC_LIB="$(find "$XCFW" -type f -name "libsodium.a" | grep -Ei 'macos-arm64' | head -n 1)"
-          test -n "$MAC_LIB"
-          echo "macOS lib: $MAC_LIB"
-          cp -a "$MAC_LIB" "$OUT_MAC/lib/arm64/libsodium.a"
+          # Le script fait un "fat lib" macOS (arm64 + arm64e + x86_64).
+          # Tu veux arm64 uniquement -> on extrait le slice arm64.
+          test -f "$PREFIX/macos/lib/libsodium.a"
+          lipo -extract arm64 "$PREFIX/macos/lib/libsodium.a" -output "$OUT_MAC/lib/arm64/libsodium.a"
+          cp -a "$PREFIX/macos/include/"* "$OUT_MAC/include/"
 
-          # Headers macOS: souvent identiques, on peut réutiliser les mêmes que iOS
-          # (on copie depuis OUT_IOS pour garantir cohérence)
-          cp -a "$OUT_IOS/include/"* "$OUT_MAC/include/"
+          # Sanity check
+          lipo -info "$OUT_IOS/lib/libsodium.a" || true
+          lipo -info "$OUT_MAC/lib/arm64/libsodium.a" || true
 
       - name: Build OpenSSL - Windows (x64)
         if: matrix.platform == 'windows-x64'
