@@ -330,7 +330,7 @@ jobs:
           set -euxo pipefail
           cd libsodium-src
 
-          # Optionnel: skip simulateurs (plus rapide, et toi tu n'en veux pas)
+          # Optionnel: skip les simulateurs
           export LIBSODIUM_SKIP_SIMULATORS=1
 
           # Respecter tes targets min OS
