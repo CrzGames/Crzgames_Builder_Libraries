@@ -17,10 +17,23 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 | **SDL3_shadercross** | commit_sha: 7b7365a86611b2a7b6462e521cf1c43a037d0970 |
 | **NATS Client C** | v3.12.0 |
 | **hiredis** | v1.3.0 |
+| **libsodium** | v1.0.21 |
 
 <br />
 
 ---
+
+## 📋 Plateforme supportés - libsodium :
+
+| Platform | Architectures | System Version | Compatible | Notes |
+|----------|---------------|----------------|------------|-------|
+| **Windows** | x64 / arm64 | Windows 10+  | ✓          | Lib précompilée à récupérer ici : https://download.libsodium.org/libsodium/releases/ |
+| **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ | |
+| **iOS/iPadOS** | arm64 (iphoneos) - not iphonesimulator | iOS 18.0+ | ✓ | |
+| **Android** | arm64-v8a / armeabi-v7a | Android 9.0+ | ✓ | |
+| **Linux** | x64 / arm64 | glibc 2.35+ | ✓ | |
+| **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 | ✓ | |
+| **Steam Deck** | x64 | Steam Linux Runtime 4.0 | ✓ | |
 
 ## 📋 Plateforme supportés - ONNX Runtime :
 
