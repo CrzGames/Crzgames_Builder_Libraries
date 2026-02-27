@@ -256,7 +256,8 @@ jobs:
 
           # Fix aarch64 (GCC/Clang) : activer crypto/aes
           if [[ "${{ matrix.platform }}" == "linux-arm64" || "${{ matrix.platform }}" == "steamrt4-arm64" ]]; then
-            export CFLAGS="${CFLAGS:-} -march=armv8-a+crypto+aes"
+            # Fix NEON types (GCC 11/14) + activer crypto/aes comme recommandé
+            export CFLAGS="${CFLAGS:-} -march=armv8-a+crypto+aes -flax-vector-conversions"
           fi
 
           ../configure --disable-shared --enable-static --prefix=/usr/local
@@ -287,6 +288,9 @@ jobs:
           # Nettoyage pour éviter mélange entre arch
           make distclean >/dev/null 2>&1 || true
           rm -rf libsodium-android-* >/dev/null 2>&1 || true
+
+          # requis par les scripts android-armv7-a.sh / android-armv8-a.sh
+          export NDK_PLATFORM="android-${{ env.ANDROID_API }}"
 
           # Build armeabi-v7a (ARMv7-A)
           ./dist-build/android-armv7-a.sh
@@ -330,7 +334,7 @@ jobs:
           set -euxo pipefail
           cd libsodium-src
 
-          # Optionnel: skip simulateurs (plus rapide, et toi tu n'en veux pas)
+          # Optionnel: skip les simulateurs
           export LIBSODIUM_SKIP_SIMULATORS=1
 
           # Respecter tes targets min OS
