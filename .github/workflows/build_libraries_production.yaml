@@ -22,6 +22,9 @@ env:
   HI_REDIS_TAG: "v1.3.0"
   ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
+  ANDROID_BUILD_TOOLS_VERSION: "36.1.0"
+  ANDROID_CMAKE_VERSION: "3.30.3"
+  ANDROID_CMDLINE_TOOLS_VERSION: "20.0"
   JAVA_DISTRIBUTION: "temurin"
   JAVA_VERSION: "17"
   XCODE_VERSION: "26.3.0"
@@ -239,12 +242,18 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Setup SDK Manager for Platforms and NDK - Android
+      - name: Setup Android SDK (Platform + Build Tools + NDK + CMake + CLI) - Android
         if: matrix.platform == 'android'
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
+          packages: >
+            platform-tools
+            platforms;${{ env.ANDROID_PLATFORM_VERSION }}
+            build-tools;${{ env.ANDROID_BUILD_TOOLS_VERSION }}
+            ndk;${{ env.ANDROID_NDK_VERSION }}
+            cmake;${{ env.ANDROID_CMAKE_VERSION }}
+            cmdline-tools;${{ env.ANDROID_CMDLINE_TOOLS_VERSION }}
 
       - name: Build libsodium (static) - Linux / SteamRT4 (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
