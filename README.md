@@ -2,7 +2,7 @@
 
 ## Informations repository
 Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2D qui sont sois beaucoup trop longue ou sois pas possible dans un CMakeLists.txt. <br />
-Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hiredis, NATS Client C<br /><br />
+Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hiredis, NATS Client C, libsodium<br /><br />
 
 <br />
 
@@ -69,7 +69,7 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 | **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 | ✓ |
 | **Steam Deck** | x64 | Steam Linux Runtime 4.0 | ✓ |
 
-## 📋 Plateforme supportés - hiredis / Nats Client C (seulement pour Windows / macOS, puisque Linux est facilement compilable pour un serveur de jeu) :
+## 📋 Plateforme supportés - hiredis / Nats Client C (seulement pour Windows / macOS, puisque Linux est facilement compilable dans un CMakelists.txt) :
 
 | Platform | Architectures | System Version | Compatible |
 |----------|---------------|----------------|------------|
