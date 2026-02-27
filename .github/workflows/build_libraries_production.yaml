@@ -295,32 +295,24 @@ jobs:
           # Build armeabi-v7a (ARMv7-A)
           ./dist-build/android-armv7-a.sh
 
-          # Build arm64-v8a (ARMv8-A)
+          # Build arm64-v8a (ARMv8-A + crypto)
           ./dist-build/android-armv8-a.sh
 
           ROOT="$GITHUB_WORKSPACE"
           OUT="$ROOT/libsodium-android"
           mkdir -p "$OUT/include" "$OUT/lib/armeabi-v7a" "$OUT/lib/arm64-v8a"
 
-          # Headers: on prend un include généré (en général identique pour les deux)
-          INC="$(find . -type d -name include -path "*libsodium-android-*" | head -n 1)"
-          test -n "$INC"
+          # Headers: on prend un include généré (identique pour les deux en général)
+          INC="./libsodium-android-armv8-a+crypto/include"
+          test -d "$INC"
           cp -a "$INC/"* "$OUT/include/"
 
-          # Libs statiques: on cherche les libsodium.a produites par chaque build
-          LIB32="$(find . -type f -name "libsodium.a" | grep -Ei '(armv7|armeabi|android.*arm[^6]?)' | head -n 1 || true)"
-          LIB64="$(find . -type f -name "libsodium.a" | grep -Ei '(arm64|aarch64|armv8|v8a)' | head -n 1 || true)"
+          # Libs statiques: prendre explicitement les deux dossiers générés par les scripts
+          LIB32="./libsodium-android-armv7-a/lib/libsodium.a"
+          LIB64="./libsodium-android-armv8-a+crypto/lib/libsodium.a"
 
-          # Fallback (si grep rate selon layout)
-          if [[ -z "$LIB32" ]]; then
-            LIB32="$(find . -type f -name "libsodium.a" -path "*android*arm*/*" | head -n 1 || true)"
-          fi
-          if [[ -z "$LIB64" ]]; then
-            LIB64="$(find . -type f -name "libsodium.a" -path "*android*arm64*/*" | head -n 1 || true)"
-          fi
-
-          test -n "$LIB32"
-          test -n "$LIB64"
+          test -f "$LIB32"
+          test -f "$LIB64"
 
           cp -a "$LIB32" "$OUT/lib/armeabi-v7a/libsodium.a"
           cp -a "$LIB64" "$OUT/lib/arm64-v8a/libsodium.a"
@@ -1001,6 +993,62 @@ jobs:
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/lib/libonnxruntime.a
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/onnxruntime
         shell: bash
+
+      - name: Upload libsodium Artifacts - Linux (x64)
+        if: matrix.platform == 'linux-x64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: libsodium-linux-x64
+          if-no-files-found: error
+          path: libsodium-artifact-linux-x64
+
+      - name: Upload libsodium Artifacts - Linux (arm64)
+        if: matrix.platform == 'linux-arm64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: libsodium-linux-arm64
+          if-no-files-found: error
+          path: libsodium-artifact-linux-arm64
+
+      - name: Upload libsodium Artifacts - SteamRT4 (x64)
+        if: matrix.platform == 'steamrt4-x64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: libsodium-steamrt4-x64
+          if-no-files-found: error
+          path: libsodium-artifact-steamrt4-x64
+
+      - name: Upload libsodium Artifacts - SteamRT4 (arm64)
+        if: matrix.platform == 'steamrt4-arm64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: libsodium-steamrt4-arm64
+          if-no-files-found: error
+          path: libsodium-artifact-steamrt4-arm64
+
+      - name: Upload libsodium Artifacts - Android (arm64-v8a / armeabi-v7a)
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v6
+        with:
+          name: libsodium-android-arm64v8a_armeabiv7a
+          if-no-files-found: error
+          path: libsodium-android
+
+      - name: Upload libsodium Artifacts - iOS (arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v6
+        with:
+          name: libsodium-ios-arm64
+          if-no-files-found: error
+          path: libsodium-ios
+
+      - name: Upload libsodium Artifacts - macOS (arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v6
+        with:
+          name: libsodium-macos-arm64
+          if-no-files-found: error
+          path: libsodium-macos
 
       - name: Upload OpenSSL Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
