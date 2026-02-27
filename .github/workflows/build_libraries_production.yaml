@@ -10,9 +10,6 @@ on:
   workflow_dispatch:
 
 env:
-  MACOS_TARGET_MIN_VERSION_OS: "15.0" # C'est la version minimale ciblé pour macOS
-  IOS_TARGET_MIN_VERSION_OS: "18.0" # C'est la version minimale ciblé pour iOS
-  ANDROID_API: "28"
   LIBSODIUM_TAG: "1.0.21-RELEASE"
   OPENSSL_TAG: "openssl-3.6.1"
   OPENSSL_APPLE_TAG: "3.6.0001"
@@ -20,6 +17,7 @@ env:
   SDL_SHADERCROSS_TAG: "7b7365a86611b2a7b6462e521cf1c43a037d0970"
   NATS_CLIENT_C_TAG: "v3.12.0"
   HI_REDIS_TAG: "v1.3.0"
+  ANDROID_API: "28" # C'est la version minimale ciblé pour Android
   ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
   ANDROID_BUILD_TOOLS_VERSION: "36.1.0"
@@ -27,6 +25,8 @@ env:
   ANDROID_CMDLINE_TOOLS_VERSION: "20.0"
   JAVA_DISTRIBUTION: "temurin"
   JAVA_VERSION: "17"
+  MACOS_TARGET_MIN_VERSION_OS: "15.0" # C'est la version minimale ciblé pour macOS
+  IOS_TARGET_MIN_VERSION_OS: "18.0" # C'est la version minimale ciblé pour iOS
   XCODE_VERSION: "26.3.0"
   PYTHON_VERSION_OTHER: "3.13"
   CMAKE_VERSION_MACOS: "3.31.0"
