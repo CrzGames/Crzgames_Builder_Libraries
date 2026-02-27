@@ -1,4 +1,4 @@
-name: Build ONNX Runtime, OpenSSL, SDL3_shadercross, NATS Client C, hiredis Libraries
+name: Build ONNX Runtime, OpenSSL, SDL3_shadercross, NATS Client C, hiredis, libsodium Libraries
 
 permissions:
   contents: write
