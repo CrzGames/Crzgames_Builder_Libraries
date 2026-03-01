@@ -2,7 +2,7 @@
 
 ## Informations repository
 Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2D qui sont sois beaucoup trop longue ou sois pas possible dans un CMakeLists.txt. <br />
-Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hiredis, NATS Client C<br /><br />
+Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hiredis, NATS Client C, libsodium<br /><br />
 
 <br />
 
@@ -27,7 +27,7 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 
 | Platform | Architectures | System Version | Compatible | Notes |
 |----------|---------------|----------------|------------|-------|
-| **Windows** | x64 / arm64 | Windows 10+  | ✓          | Lib précompilée à récupérer ici : https://download.libsodium.org/libsodium/releases/ |
+| **Windows** | x64 / arm64 | Windows 10+  | ✓          | Lib MSVC précompilée à récupérer ici : https://download.libsodium.org/libsodium/releases/ |
 | **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ | |
 | **iOS/iPadOS** | arm64 (iphoneos) - not iphonesimulator | iOS 18.0+ | ✓ | |
 | **Android** | arm64-v8a / armeabi-v7a | Android 9.0+ | ✓ | |
@@ -69,7 +69,7 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 | **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 | ✓ |
 | **Steam Deck** | x64 | Steam Linux Runtime 4.0 | ✓ |
 
-## 📋 Plateforme supportés - hiredis / Nats Client C (seulement pour Windows / macOS, puisque Linux est facilement compilable pour un serveur de jeu) :
+## 📋 Plateforme supportés - hiredis / Nats Client C (seulement pour Windows / macOS, puisque Linux est facilement compilable dans un CMakelists.txt) :
 
 | Platform | Architectures | System Version | Compatible |
 |----------|---------------|----------------|------------|
@@ -86,7 +86,6 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 
 ### ONNX Runtime
 #### iOS / macOS :
-- macOS : macOS 10.12 et ultérieures (c'est écrit sur la doc mais c'est faux) -> Il faut target la version macOS >= 14.0 et avec un sdk >= 14.4.
 - iOS/macOS : Utilise tout les deux CoreML.
 - iOS/macOS : Utiliser CMake 3.28 (minimum demandé par ONNX Runtime) à CMake 3.31 (après cette version c'est CMake version 4.x.x, et fait planter avec le flag : --use_coreml)
 - iOS 13.0 et ultérieurs (vu que le flag --use_coreml demande iOS 13.0+)

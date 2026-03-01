@@ -1,4 +1,4 @@
-name: Build ONNX Runtime, OpenSSL, SDL3_shadercross, NATS Client C, hiredis Libraries
+name: Build ONNX Runtime, OpenSSL, SDL3_shadercross, NATS Client C, hiredis, libsodium Libraries
 
 permissions:
   contents: write
@@ -10,9 +10,6 @@ on:
   workflow_dispatch:
 
 env:
-  MACOS_TARGET_MIN_VERSION_OS: "15.0" # C'est la version minimale ciblé pour macOS
-  IOS_TARGET_MIN_VERSION_OS: "18.0" # C'est la version minimale ciblé pour iOS
-  ANDROID_API: "28"
   LIBSODIUM_TAG: "1.0.21-RELEASE"
   OPENSSL_TAG: "openssl-3.6.1"
   OPENSSL_APPLE_TAG: "3.6.0001"
@@ -20,10 +17,16 @@ env:
   SDL_SHADERCROSS_TAG: "7b7365a86611b2a7b6462e521cf1c43a037d0970"
   NATS_CLIENT_C_TAG: "v3.12.0"
   HI_REDIS_TAG: "v1.3.0"
+  ANDROID_API: "28" # C'est la version minimale ciblé pour Android
   ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
+  ANDROID_BUILD_TOOLS_VERSION: "36.1.0"
+  ANDROID_CMAKE_VERSION: "3.30.3"
+  ANDROID_CMDLINE_TOOLS_VERSION: "20.0"
   JAVA_DISTRIBUTION: "temurin"
   JAVA_VERSION: "17"
+  MACOS_TARGET_MIN_VERSION_OS: "15.0" # C'est la version minimale ciblé pour macOS
+  IOS_TARGET_MIN_VERSION_OS: "18.0" # C'est la version minimale ciblé pour iOS
   XCODE_VERSION: "26.3.0"
   PYTHON_VERSION_OTHER: "3.13"
   CMAKE_VERSION_MACOS: "3.31.0"
@@ -121,7 +124,7 @@ jobs:
           submodules: recursive
 
       - name: Checkout NATS Client C - Windows (x64)
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'macos'
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'macos'
         uses: actions/checkout@v6
         with:
           repository: nats-io/nats.c
@@ -129,7 +132,7 @@ jobs:
           ref: ${{ env.NATS_CLIENT_C_TAG }}
 
       - name: Checkout hiredis - Windows (x64)
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'macos'
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'macos'
         uses: actions/checkout@v6
         with:
           repository: redis/hiredis
@@ -239,12 +242,18 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Setup SDK Manager for Platforms and NDK - Android
+      - name: Setup Android SDK (Platform + Build Tools + NDK + CMake + CLI) - Android
         if: matrix.platform == 'android'
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;${{ env.ANDROID_PLATFORM_VERSION }} ndk;${{ env.ANDROID_NDK_VERSION }}'
           accept-android-sdk-licenses: true
+          packages: >
+            platform-tools
+            platforms;${{ env.ANDROID_PLATFORM_VERSION }}
+            build-tools;${{ env.ANDROID_BUILD_TOOLS_VERSION }}
+            ndk;${{ env.ANDROID_NDK_VERSION }}
+            cmake;${{ env.ANDROID_CMAKE_VERSION }}
+            cmdline-tools;${{ env.ANDROID_CMDLINE_TOOLS_VERSION }}
 
       - name: Build libsodium (static) - Linux / SteamRT4 (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
@@ -523,17 +532,27 @@ jobs:
           :: Build UNIQUEMENT la lib statique pour ne pas construire les tests
           cmake --build build --target nats_static --config Release --parallel
 
-      - name: Upload NATS Client C Artifacts - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
-        with:
-          name: nats-windows-x64
-          if-no-files-found: error
-          path: |
-            nats-client-c-src/build/lib/Release/nats_static.lib
-            nats-client-c-src/src/nats.h
-            nats-client-c-src/src/version.h
-            nats-client-c-src/src/status.h
+      - name: Build Nats Client C - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          :: Initialiser l’environnement Visual Studio
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+
+          :: Générer les fichiers dans build/ à partir de la racine du projet
+          cd nats-client-c-src
+
+          cmake -S . -B build -G "Visual Studio 17 2022" -A ARM64 ^
+            -DNATS_BUILD_STREAMING=OFF ^
+            -DNATS_BUILD_LIB_STATIC=ON ^
+            -DNATS_BUILD_LIB_SHARED=OFF ^
+            -DNATS_BUILD_EXAMPLES=OFF ^
+            -DOPENSSL_ROOT_DIR="%GITHUB_WORKSPACE%\openssl-artifact-windows\arm64" ^
+            -DOPENSSL_CRYPTO_LIBRARY="%GITHUB_WORKSPACE%\openssl-artifact-windows\arm64\lib\libcrypto.lib" ^
+            -DOPENSSL_SSL_LIBRARY="%GITHUB_WORKSPACE%\openssl-artifact-windows\arm64\lib\libssl.lib"
+
+          :: Build UNIQUEMENT la lib statique pour ne pas construire les tests
+          cmake --build build --target nats_static --config Release --parallel
 
       - name: Build Nats Client C - macOS (arm64)
         if: matrix.platform == 'macos'
@@ -553,18 +572,6 @@ jobs:
             -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }}
 
           cmake --build build --target nats_static --config Release --parallel
-
-      - name: Upload NATS Client C Artifacts - macOS (arm64)
-        if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
-        with:
-          name: nats-macos-arm64
-          if-no-files-found: error
-          path: |
-            nats-client-c-src/build/lib/libnats_static.a
-            nats-client-c-src/src/nats.h
-            nats-client-c-src/src/version.h
-            nats-client-c-src/src/status.h
 
       - name: Build hiredis - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -591,19 +598,30 @@ jobs:
           :: Build en Release
           cmake --build build --config Release --parallel
 
-      - name: Upload hiredis Artifacts - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
-        with:
-          name: hiredis-windows-x64
-          if-no-files-found: error
-          path: |
-            hiredis-src/build/Release/hiredis.lib
-            hiredis-src/build/Release/hiredis_ssl.lib
-            hiredis-src/hiredis.h
-            hiredis-src/alloc.h
-            hiredis-src/read.h
-            hiredis-src/sds.h
+      - name: Build hiredis - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          :: Initialiser l’environnement Visual Studio
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+
+          :: Aller dans le dossier du repo hiredis-src
+          cd hiredis-src
+
+          :: Configure: build static + SSL + pas de tests/exemples/nuget
+          cmake -S . -B build -G "Visual Studio 17 2022" -A ARM64 ^
+            -DBUILD_SHARED_LIBS=OFF ^
+            -DENABLE_SSL=ON ^
+            -DDISABLE_TESTS=ON ^
+            -DENABLE_EXAMPLES=OFF ^
+            -DENABLE_NUGET=OFF ^
+            -DOPENSSL_USE_STATIC_LIBS=ON ^
+            -DOPENSSL_ROOT_DIR="%GITHUB_WORKSPACE%\openssl-artifact-windows\arm64" ^
+            -DOPENSSL_CRYPTO_LIBRARY="%GITHUB_WORKSPACE%\openssl-artifact-windows\arm64\lib\libcrypto.lib" ^
+            -DOPENSSL_SSL_LIBRARY="%GITHUB_WORKSPACE%\openssl-artifact-windows\arm64\lib\libssl.lib"
+
+          :: Build en Release
+          cmake --build build --config Release --parallel
 
       - name: Build hiredis - macOS (arm64)
         if: matrix.platform == 'macos'
@@ -625,20 +643,6 @@ jobs:
             -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_TARGET_MIN_VERSION_OS }}
 
           cmake --build build --config Release --parallel
-
-      - name: Upload hiredis Artifacts - macOS (arm64)
-        if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
-        with:
-          name: hiredis-macos-arm64
-          if-no-files-found: error
-          path: |
-            hiredis-src/build/libhiredis.a
-            hiredis-src/build/libhiredis_ssl.a
-            hiredis-src/hiredis.h
-            hiredis-src/alloc.h
-            hiredis-src/read.h
-            hiredis-src/sds.h
 
       - name: Setup SDL (for SDL3_shadercross) - Windows (x64) / Linux (x64/arm64) / SteamRT4 (x64/arm64) / macOS (arm64)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' && matrix.platform != 'windows-arm64' }}
@@ -994,9 +998,90 @@ jobs:
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/onnxruntime
         shell: bash
 
+      - name: Upload hiredis Artifacts - macOS (arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v6
+        with:
+          name: hiredis-macos-arm64
+          if-no-files-found: error
+          path: |
+            hiredis-src/build/libhiredis.a
+            hiredis-src/build/libhiredis_ssl.a
+            hiredis-src/hiredis.h
+            hiredis-src/hiredis_ssl.h
+            hiredis-src/alloc.h
+            hiredis-src/read.h
+            hiredis-src/sds.h
+
+      - name: Upload hiredis Artifacts - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: hiredis-windows-arm64
+          if-no-files-found: error
+          path: |
+            hiredis-src/build/Release/hiredis.lib
+            hiredis-src/build/Release/hiredis_ssl.lib
+            hiredis-src/hiredis.h
+            hiredis-src/hiredis_ssl.h
+            hiredis-src/alloc.h
+            hiredis-src/read.h
+            hiredis-src/sds.h
+
+      - name: Upload hiredis Artifacts - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: hiredis-windows-x64
+          if-no-files-found: error
+          path: |
+            hiredis-src/build/Release/hiredis.lib
+            hiredis-src/build/Release/hiredis_ssl.lib
+            hiredis-src/hiredis.h
+            hiredis-src/hiredis_ssl.h
+            hiredis-src/alloc.h
+            hiredis-src/read.h
+            hiredis-src/sds.h
+
+      - name: Upload NATS Client C Artifacts - macOS (arm64)
+        if: matrix.platform == 'macos'
+        uses: actions/upload-artifact@v6
+        with:
+          name: nats-macos-arm64
+          if-no-files-found: error
+          path: |
+            nats-client-c-src/build/lib/libnats_static.a
+            nats-client-c-src/src/nats.h
+            nats-client-c-src/src/version.h
+            nats-client-c-src/src/status.h
+
+      - name: Upload NATS Client C Artifacts - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: nats-windows-arm64
+          if-no-files-found: error
+          path: |
+            nats-client-c-src/build/Release/nats_static.lib
+            nats-client-c-src/src/nats.h
+            nats-client-c-src/src/version.h
+            nats-client-c-src/src/status.h
+
+      - name: Upload NATS Client C Artifacts - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: nats-windows-x64
+          if-no-files-found: error
+          path: |
+            nats-client-c-src/build/lib/Release/nats_static.lib
+            nats-client-c-src/src/nats.h
+            nats-client-c-src/src/version.h
+            nats-client-c-src/src/status.h
+
       - name: Upload libsodium Artifacts - Linux (x64)
         if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-linux-x64
           if-no-files-found: error
@@ -1004,7 +1089,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-linux-arm64
           if-no-files-found: error
@@ -1012,7 +1097,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - SteamRT4 (x64)
         if: matrix.platform == 'steamrt4-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-steamrt4-x64
           if-no-files-found: error
@@ -1020,7 +1105,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - SteamRT4 (arm64)
         if: matrix.platform == 'steamrt4-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-steamrt4-arm64
           if-no-files-found: error
@@ -1028,7 +1113,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-android-arm64v8a_armeabiv7a
           if-no-files-found: error
@@ -1036,7 +1121,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - iOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-ios-arm64
           if-no-files-found: error
@@ -1044,7 +1129,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-macos-arm64
           if-no-files-found: error
@@ -1052,133 +1137,133 @@ jobs:
 
       - name: Upload OpenSSL Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-macos-arm64
           path: openssl-macos
 
       - name: Upload OpenSSL Artifacts - iOS (arm64)
         if: matrix.platform == 'ios'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-ios-arm64
           path: openssl-ios
 
       - name: Upload OpenSSL Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-android-arm64v8a_armeabiv7a
           path: openssl-android/
 
       - name: Upload OpenSSL Artifacts - SteamRT4 (x64)
         if: matrix.platform == 'steamrt4-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-steamrt4-x64
           path: openssl-src/build-output/x86_64
       
       - name: Upload OpenSSL Artifacts - SteamRT4 (arm64)
         if: matrix.platform == 'steamrt4-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-steamrt4-arm64
           path: openssl-src/build-output/arm64
 
       - name: Upload OpenSSL Artifacts - Linux (x64)
         if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-linux-x64
           path: openssl-src/build-output/x86_64
 
       - name: Upload OpenSSL Artifacts - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-linux-arm64
           path: openssl-src/build-output/arm64
 
       - name: Upload OpenSSL Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-windows-x64
           path: openssl-artifact-windows/x64
 
       - name: Upload OpenSSL Artifacts - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-windows-arm64
           path: openssl-artifact-windows/arm64
 
       - name: Upload ONNX Runtime Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-windows-x64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-windows-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Linux (x64)
         if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-linux-x64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-linux-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - SteamRT4 (x64)
         if: matrix.platform == 'steamrt4-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-steamrt4-x64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - SteamRT4 (arm64)
         if: matrix.platform == 'steamrt4-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-steamrt4-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-android-arm64v8a_armeabiv7a
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-macos-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - iOS (arm64)
         if: matrix.platform == 'ios'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-ios-arm64
           path: build-onnxruntime
   
       - name: Upload SDL3_shadercross Artifacts - All Platforms (except iOS/Android)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: sdl3_shadercross-${{ matrix.platform }}
@@ -1193,7 +1278,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download All Artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: temp
 
@@ -1293,6 +1378,57 @@ jobs:
           cp -a temp/sdl3_shadercross-macos/include/* merged4/macos/include/
           cp -a temp/sdl3_shadercross-macos/lib/* merged4/macos/lib/arm64/
 
+          # ------- NATS Client C ---------
+          # Windows (x64 / arm64)
+          mkdir -p merged3/windows/include merged3/windows/lib/x64 merged3/windows/lib/arm64
+          cp -a temp/nats-windows-x64/include/* merged3/windows/include/
+          cp -a temp/nats-windows-x64/lib/* merged3/windows/lib/x64/
+          cp -a temp/nats-windows-arm64/include/* merged3/windows/include/
+          cp -a temp/nats-windows-arm64/lib/* merged3/windows/lib/arm64/
+
+          # macOS (arm64)
+          mkdir -p merged3/macos/include merged3/macos/lib/arm64
+          cp -a temp/nats-macos-arm64/include/* merged3/macos/include/
+          cp -a temp/nats-macos-arm64/lib/* merged3/macos/lib/arm64/
+
+          # ------- hiredis ---------
+          # Windows (x64 / arm64)
+          mkdir -p merged5/windows/include merged5/windows/lib/x64 merged5/windows/lib/arm64
+          cp -a temp/hiredis-windows-x64/include/* merged5/windows/include/
+          cp -a temp/hiredis-windows-x64/lib/* merged5/windows/lib/x64/
+          cp -a temp/hiredis-windows-arm64/include/* merged5/windows/include/
+          cp -a temp/hiredis-windows-arm64/lib/* merged5/windows/lib/arm64/
+
+          # macOS (arm64)
+          mkdir -p merged5/macos/include merged5/macos/lib/arm64
+          cp -a temp/hiredis-macos-arm64/include/* merged5/macos/include
+          cp -a temp/hiredis-macos-arm64/lib/* merged5/macos/lib/arm64/
+
+          # ------- libsodium ---------
+          # Linux (x64 / arm64)
+          mkdir -p merged6/linux/lib/x64 merged6/linux/lib/arm64
+          cp -a temp/libsodium-linux-x64/lib/* merged6/linux/lib/x64/
+          cp -a temp/libsodium-linux-arm64/lib/* merged6/linux/lib/arm64
+
+          # SteamRT4 (x64 / arm64)
+          mkdir -p merged6/steamrt4/lib/x64 merged6/steamrt4/lib/arm64
+          cp -a temp/libsodium-steamrt4-x64/lib/* merged6/steamrt4/lib/x64/
+          cp -a temp/libsodium-steamrt4-arm64/lib/* merged6/steamrt4/lib/arm64/
+
+          # Android (arm64-v8a / armeabi-v7a)
+          mkdir -p merged6/android/lib/arm64-v8a merged6/android/lib/armeabi-v7a
+          cp -a temp/libsodium-android-arm64v8a_armeabiv7a/lib/arm64-v8a/* merged6/android/lib/arm64-v8a/
+          cp -a temp/libsodium-android-arm64v8a_armeabiv7a/lib/armeabi-v7a/* merged6/android/lib/armeabi-v7a/
+
+          # iOS (arm64)
+          mkdir -p merged6/ios/lib/arm64
+          cp -a temp/libsodium-ios-arm64/lib/arm64/* merged6/ios/lib/arm64/
+          
+          # macOS (arm64)
+          mkdir -p merged6/macos/lib/arm64
+          cp -a temp/libsodium-macos-arm64/lib/arm64/* merged6/macos/lib/arm64/
+          
+
       - name: Zip merged folders
         run: |
           cd merged
@@ -1312,22 +1448,42 @@ jobs:
           zip -r ../sdl_shadercross-windows.zip windows/*
           zip -r ../sdl_shadercross-steamrt4.zip steamrt4/*
           zip -r ../sdl_shadercross-macos.zip macos/*
+          cd ../merged3
+          zip -r ../nats-windows.zip windows/*
+          zip -r ../nats-macos.zip macos/*
+          cd ../merged5
+          zip -r ../hiredis-windows.zip windows/*
+          zip -r ../hiredis-macos.zip macos/*
+          cd ../merged6
+          zip -r ../libsodium-linux.zip linux/*
+          zip -r ../libsodium-steamrt4.zip steamrt4/*
+          zip -r ../libsodium-android.zip android/*
+          zip -r ../libsodium-ios.zip ios/*
+          zip -r ../libsodium-macos.zip macos/*
 
       - name: Generate release notes
         run: |
           OPENSSL_TAG="${{ env.OPENSSL_TAG }}"
           ONNXRUNTIME_TAG="${{ env.ONNXRUNTIME_TAG }}"
           SDL_SHADERCROSS_TAG="${{ env.SDL_SHADERCROSS_TAG }}"
+          LIBSODIUM_TAG="${{ env.LIBSODIUM_TAG }}"
+          HIREDIS_TAG="${{ env.HIREDIS_TAG }}"
+          NATS_CLIENT_C_TAG="${{ env.NATS_CLIENT_C_TAG }}"
 
           OPENSSL_VERSION="${OPENSSL_TAG#openssl-}"
           ONNX_VERSION="${ONNXRUNTIME_TAG#v}"
           SDL_SHADERCROSS_VERSION="${SDL_SHADERCROSS_TAG}"
-
+          LIBSODIUM_VERSION="${LIBSODIUM_TAG}"
+          HIREDIS_VERSION="${HIREDIS_TAG}"
+          NATS_CLIENT_C_VERSION="${NATS_CLIENT_C_TAG}"
           echo "## Build Dependencies Versions" > release_notes.md
           echo "" >> release_notes.md
           echo "- OpenSSL: $OPENSSL_VERSION" >> release_notes.md
           echo "- ONNX Runtime: $ONNX_VERSION" >> release_notes.md
           echo "- SDL3_shadercross: $SDL_SHADERCROSS_VERSION" >> release_notes.md
+          echo "- libsodium: $LIBSODIUM_VERSION" >> release_notes.md
+          echo "- hiredis: $HIREDIS_VERSION" >> release_notes.md
+          echo "- nats-client-c: $NATS_CLIENT_C_VERSION" >> release_notes.md
           
       - name: Deploy assets to GitHub Releases
         uses: softprops/action-gh-release@v2
@@ -1347,4 +1503,13 @@ jobs:
             sdl_shadercross-windows.zip
             sdl_shadercross-steamrt4.zip
             sdl_shadercross-macos.zip
+            libsodium-linux.zip
+            libsodium-steamrt4.zip
+            libsodium-android.zip
+            libsodium-ios.zip
+            libsodium-macos.zip
+            hiredis-windows.zip
+            hiredis-macos.zip
+            nats-windows.zip
+            nats-macos.zip
           body_path: release_notes.md
