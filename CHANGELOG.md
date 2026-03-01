@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.1.4...v1.2.0) (2026-03-01)
+
+
+### Features
+
+* change sdk android config ([dd784a5](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/dd784a57f9ef07c69872aa6174f917f702785321))
+* test if is valid ([817b26e](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/817b26e099271d3eee3b81a1f9b64676bcffb1b0))
+
 ## [1.1.4](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.1.3...v1.1.4) (2026-02-27)
 
 
