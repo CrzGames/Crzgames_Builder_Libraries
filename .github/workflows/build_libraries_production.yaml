@@ -90,7 +90,7 @@ jobs:
           ref: ${{ env.ONNXRUNTIME_TAG }}
           submodules: recursive
 
-      - name: Checkout libsodium - Android / iOS / macOS / Linux / SteamRT4
+      - name: Checkout libsodium - All Platforms
         uses: actions/checkout@v6
         with:
           repository: jedisct1/libsodium
@@ -122,7 +122,7 @@ jobs:
           path: sdl_shadercross-src
           submodules: recursive
 
-      - name: Checkout NATS Client C - Windows (x64)
+      - name: Checkout NATS Client C - Windows (x64/arm64) / macOS
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'macos'
         uses: actions/checkout@v6
         with:
@@ -130,7 +130,7 @@ jobs:
           path: nats-client-c-src
           ref: ${{ env.NATS_CLIENT_C_TAG }}
 
-      - name: Checkout hiredis - Windows (x64)
+      - name: Checkout hiredis - Windows (x64/arm64) / macOS
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'macos'
         uses: actions/checkout@v6
         with:
