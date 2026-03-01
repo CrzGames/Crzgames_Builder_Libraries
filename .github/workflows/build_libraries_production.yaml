@@ -1081,7 +1081,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - Linux (x64)
         if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-linux-x64
           if-no-files-found: error
@@ -1089,7 +1089,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-linux-arm64
           if-no-files-found: error
@@ -1097,7 +1097,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - SteamRT4 (x64)
         if: matrix.platform == 'steamrt4-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-steamrt4-x64
           if-no-files-found: error
@@ -1105,7 +1105,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - SteamRT4 (arm64)
         if: matrix.platform == 'steamrt4-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-steamrt4-arm64
           if-no-files-found: error
@@ -1113,7 +1113,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-android-arm64v8a_armeabiv7a
           if-no-files-found: error
@@ -1121,7 +1121,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - iOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-ios-arm64
           if-no-files-found: error
@@ -1129,7 +1129,7 @@ jobs:
 
       - name: Upload libsodium Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libsodium-macos-arm64
           if-no-files-found: error
@@ -1137,133 +1137,133 @@ jobs:
 
       - name: Upload OpenSSL Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-macos-arm64
           path: openssl-macos
 
       - name: Upload OpenSSL Artifacts - iOS (arm64)
         if: matrix.platform == 'ios'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-ios-arm64
           path: openssl-ios
 
       - name: Upload OpenSSL Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-android-arm64v8a_armeabiv7a
           path: openssl-android/
 
       - name: Upload OpenSSL Artifacts - SteamRT4 (x64)
         if: matrix.platform == 'steamrt4-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-steamrt4-x64
           path: openssl-src/build-output/x86_64
       
       - name: Upload OpenSSL Artifacts - SteamRT4 (arm64)
         if: matrix.platform == 'steamrt4-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-steamrt4-arm64
           path: openssl-src/build-output/arm64
 
       - name: Upload OpenSSL Artifacts - Linux (x64)
         if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-linux-x64
           path: openssl-src/build-output/x86_64
 
       - name: Upload OpenSSL Artifacts - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-linux-arm64
           path: openssl-src/build-output/arm64
 
       - name: Upload OpenSSL Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-windows-x64
           path: openssl-artifact-windows/x64
 
       - name: Upload OpenSSL Artifacts - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: openssl-windows-arm64
           path: openssl-artifact-windows/arm64
 
       - name: Upload ONNX Runtime Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-windows-x64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-windows-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Linux (x64)
         if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-linux-x64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Linux (arm64)
         if: matrix.platform == 'linux-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-linux-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - SteamRT4 (x64)
         if: matrix.platform == 'steamrt4-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-steamrt4-x64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - SteamRT4 (arm64)
         if: matrix.platform == 'steamrt4-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-steamrt4-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - Android (arm64-v8a / armeabi-v7a)
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-android-arm64v8a_armeabiv7a
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-macos-arm64
           path: build-onnxruntime
 
       - name: Upload ONNX Runtime Artifacts - iOS (arm64)
         if: matrix.platform == 'ios'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: onnxruntime-ios-arm64
           path: build-onnxruntime
   
       - name: Upload SDL3_shadercross Artifacts - All Platforms (except iOS/Android)
         if: ${{ matrix.platform != 'ios' && matrix.platform != 'android' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: sdl3_shadercross-${{ matrix.platform }}
@@ -1278,7 +1278,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download All Artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: temp
 
