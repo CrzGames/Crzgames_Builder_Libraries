@@ -254,21 +254,21 @@ jobs:
             cmake;${{ env.ANDROID_CMAKE_VERSION }}
             cmdline-tools;${{ env.ANDROID_CMDLINE_TOOLS_VERSION }}
 
-      - name: Build libsodium (static - /MD) - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
+      - name: Build libsodium (static + /MD) - Windows (x64) /MD
+        if: matrix.platform == 'windows-x64'
         shell: cmd
         run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
           cd libsodium-src\builds\msvc\vs2022
 
           msbuild libsodium.sln ^
             /p:Configuration=StaticRelease ^
-            /p:Platform=ARM64 ^
+            /p:Platform=x64 ^
             /p:RuntimeLibrary=MultiThreadedDLL ^
             /m
 
-      - name: Build libsodium (static, /MD) - Windows (arm64)
+      - name: Build libsodium (static + /MD) - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
         shell: cmd
         run: |
