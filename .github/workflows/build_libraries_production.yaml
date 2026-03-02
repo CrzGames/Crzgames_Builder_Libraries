@@ -284,6 +284,8 @@ jobs:
             /p:Configuration=StaticRelease ^
             /p:Platform=x64
 
+          dumpbin /directives ..\..\..\..\bin\ARM64\Release\v143\static\libsodium.lib | findstr /i defaultlib
+
       - name: Build libsodium (static + /MD) - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
         shell: cmd
@@ -313,6 +315,8 @@ jobs:
             /m ^
             /p:Configuration=StaticRelease ^
             /p:Platform=ARM64
+
+          dumpbin /directives ..\..\..\..\bin\ARM64\Release\v143\static\libsodium.lib | findstr /i defaultlib
 
       - name: Build libsodium (static) - Linux / SteamRT4 (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
