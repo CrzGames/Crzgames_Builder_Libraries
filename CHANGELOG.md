@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.6](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.3.5...v1.3.6) (2026-03-02)
+
+
+### Bug Fixes
+
+* fixed libsodium ([1ec0373](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/1ec037392ce0be8125c1d490dae2dfc73cfed8ec))
+
 ## [1.3.5](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.3.4...v1.3.5) (2026-03-02)
 
 
