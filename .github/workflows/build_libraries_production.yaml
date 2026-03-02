@@ -254,69 +254,45 @@ jobs:
             cmake;${{ env.ANDROID_CMAKE_VERSION }}
             cmdline-tools;${{ env.ANDROID_CMDLINE_TOOLS_VERSION }}
 
-      - name: Build libsodium (static + /MD) - Windows (x64)
+      - name: Build libsodium (static + /MD) with vcpkg - Windows (x64)
         if: matrix.platform == 'windows-x64'
         shell: cmd
         run: |
           call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
-          cd libsodium-src\builds\msvc\vs2022
 
-          rem --- create runtime-md.props on the fly ---
-          (
-            echo ^<?xml version="1.0" encoding="utf-8"?^>
-            echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"^>
-            echo   ^<ItemDefinitionGroup^>
-            echo     ^<ClCompile^>
-            echo       ^<!-- Release -^> /MD --^>
-            echo       ^<RuntimeLibrary Condition="$(Configuration.IndexOf('Debug')) == -1"^>MultiThreadedDLL^</RuntimeLibrary^>
-            echo       ^<!-- Debug -^> /MDd --^>
-            echo       ^<RuntimeLibrary Condition="$(Configuration.IndexOf('Debug')) != -1"^>MultiThreadedDebugDLL^</RuntimeLibrary^>
-            echo     ^</ClCompile^>
-            echo   ^</ItemDefinitionGroup^>
-            echo ^</Project^>
-          ) > runtime-md.props
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          bootstrap-vcpkg.bat
 
-          rem --- force import AFTER Microsoft.Cpp.props ---
-          set "ForceImportAfterCppProps=%CD%\runtime-md.props"
+          vcpkg install libsodium --triplet x64-windows-static-md
 
-          msbuild libsodium.sln ^
-            /m ^
-            /p:Configuration=StaticRelease ^
-            /p:Platform=x64
+          cd ..
+          set "OUT=%GITHUB_WORKSPACE%\libsodium-artifact-windows-x64"
+          mkdir "%OUT%\include"
+          mkdir "%OUT%\lib\x86_64"
 
-          dumpbin /directives ..\..\..\..\bin\ARM64\Release\v143\static\libsodium.lib | findstr /i defaultlib
+          xcopy /E /I /Y vcpkg\installed\x64-windows-static-md\include "%OUT%\include"
+          copy /Y vcpkg\installed\x64-windows-static-md\lib\libsodium.lib "%OUT%\lib\x86_64\libsodium.lib"
 
-      - name: Build libsodium (static + /MD) - Windows (arm64)
+      - name: Build libsodium (static + /MD) with vcpkg - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
         shell: cmd
         run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
-          cd libsodium-src\builds\msvc\vs2022
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
-          rem --- create runtime-md.props on the fly ---
-          (
-            echo ^<?xml version="1.0" encoding="utf-8"?^>
-            echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"^>
-            echo   ^<ItemDefinitionGroup^>
-            echo     ^<ClCompile^>
-            echo       ^<!-- Release -^> /MD --^>
-            echo       ^<RuntimeLibrary Condition="$(Configuration.IndexOf('Debug')) == -1"^>MultiThreadedDLL^</RuntimeLibrary^>
-            echo       ^<!-- Debug -^> /MDd --^>
-            echo       ^<RuntimeLibrary Condition="$(Configuration.IndexOf('Debug')) != -1"^>MultiThreadedDebugDLL^</RuntimeLibrary^>
-            echo     ^</ClCompile^>
-            echo   ^</ItemDefinitionGroup^>
-            echo ^</Project^>
-          ) > runtime-md.props
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          bootstrap-vcpkg.bat
 
-          rem --- force import AFTER Microsoft.Cpp.props ---
-          set "ForceImportAfterCppProps=%CD%\runtime-md.props"
+          vcpkg install libsodium --triplet arm64-windows-static-md
 
-          msbuild libsodium.sln ^
-            /m ^
-            /p:Configuration=StaticRelease ^
-            /p:Platform=ARM64
+          cd ..
+          set "OUT=%GITHUB_WORKSPACE%\libsodium-artifact-windows-arm64"
+          mkdir "%OUT%\include"
+          mkdir "%OUT%\lib\arm64"
 
-          dumpbin /directives ..\..\..\..\bin\ARM64\Release\v143\static\libsodium.lib | findstr /i defaultlib
+          xcopy /E /I /Y vcpkg\installed\arm64-windows-static-md\include "%OUT%\include"
+          copy /Y vcpkg\installed\arm64-windows-static-md\lib\libsodium.lib "%OUT%\lib\arm64\libsodium.lib"
 
       - name: Build libsodium (static) - Linux / SteamRT4 (x64/arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
@@ -1141,6 +1117,22 @@ jobs:
             nats-client-c-src/src/nats.h
             nats-client-c-src/src/version.h
             nats-client-c-src/src/status.h
+
+      - name: Upload libsodium Artifacts - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: libsodium-windows-x64
+          if-no-files-found: error
+          path: libsodium-artifact-windows-x64
+
+      - name: Upload libsodium Artifacts - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: libsodium-windows-arm64
+          if-no-files-found: error
+          path: libsodium-artifact-windows-arm64
 
       - name: Upload libsodium Artifacts - Linux (x64)
         if: matrix.platform == 'linux-x64'
