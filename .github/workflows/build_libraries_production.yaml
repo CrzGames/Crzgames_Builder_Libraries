@@ -280,7 +280,7 @@ jobs:
             cmake;${{ env.ANDROID_CMAKE_VERSION }}
             cmdline-tools;${{ env.ANDROID_CMDLINE_TOOLS_VERSION }}
 
-      - name: Build gRPC + Protobuf - Linux (x64/arm64) / macOS (arm64)
+      - name: Build gRPC + Protobuf (for Agones SDK Client C++) - Linux (x64/arm64) / macOS (arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
         shell: bash
         run: |
@@ -300,7 +300,7 @@ jobs:
           cmake --build . --parallel
           cmake --install .
 
-      - name: Build gRPC + Protobuf - Windows (x64)
+      - name: Build gRPC + Protobuf (for Agones SDK Client C++) - Windows (x64)
         if: matrix.platform == 'windows-x64'
         shell: cmd
         run: |
@@ -317,7 +317,7 @@ jobs:
 
           cmake --build . --config Release --target install -j 4
 
-      - name: Build gRPC + Protobuf - Windows (arm64)
+      - name: Build gRPC + Protobuf (for Agones SDK Client C++) - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
         shell: cmd
         run: |
@@ -334,7 +334,7 @@ jobs:
 
           cmake --build . --config Release --target install -j 4
 
-      - name: Build Agones C++ SDK - Linux (x64/arm64) / macOS (arm64)
+      - name: Build Agones SDK Client C++ - Linux (x64/arm64) / macOS (arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
         shell: bash
         run: |
@@ -351,7 +351,7 @@ jobs:
 
           cmake --build . --target install --parallel
 
-      - name: Build Agones C++ SDK - Windows (x64)
+      - name: Build Agones SDK Client C++ - Windows (x64)
         if: matrix.platform == 'windows-x64'
         shell: cmd
         run: |
@@ -366,7 +366,7 @@ jobs:
 
           cmake --build . --config Release --target install -j 4
 
-      - name: Build Agones C++ SDK - Windows (arm64)
+      - name: Build Agones SDK Client C++ - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
         shell: cmd
         run: |
