@@ -1,12 +1,13 @@
 # Crzgames Builder Libraries
 
 ## Informations repository
-Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2D / Crzgames_RCNET / Crzgames_RC2D_GameTemplate / Crzgames_RCNET_ServerTemplate qui sont sois beaucoup trop longue ou sois pas possible dans un CMakeLists.txt. <br />
-Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hiredis, NATS Client C, libsodium. <br /><br />
+Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2D / Crzgames_RCNET / Crzgames_RC2D_GameTemplate / Crzgames_RCNET_ServerTemplate qui sont sois beaucoup trop longue ou sois pas possible dans un CMakeLists.txt.
 
 <br />
 
 ---
+
+<br />
 
 ## 📋 Libraries - Latest Release Artifacts :
 
@@ -18,10 +19,14 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 | **NATS Client C** | v3.12.0 |
 | **hiredis** | v1.3.0 |
 | **libsodium** | v1.0.21 |
+| **grpc** | v1.76.0 |
+| **agones sdk client C++** | v1.55.0 |
 
 <br />
 
 ---
+
+<br />
 
 ## 📋 Plateforme supportés - libsodium :
 
@@ -69,7 +74,30 @@ Les bibliothèques compilées pour : OpenSSL, ONNX Runtime, SDL3_shadercross, hi
 | **Steam Linux** | x64 / arm64 | Steam Linux Runtime 4.0 | ✓ |
 | **Steam Deck** | x64 | Steam Linux Runtime 4.0 | ✓ |
 
-## 📋 Plateforme supportés - hiredis / Nats Client C (seulement pour Windows / macOS, puisque Linux est facilement compilable dans un CMakelists.txt) :
+## 📋 Plateforme supportés - gRPC :
+
+| Platform | Architectures | System Version | Compatible |
+|----------|---------------|----------------|------------|
+| **Windows** | x64 / arm64 | Windows 10+  | ✓           |
+| **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
+| **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
+
+## 📋 Plateforme supportés - Agones SDK Client C++ :
+
+| Platform | Architectures | System Version | Compatible |
+|----------|---------------|----------------|------------|
+| **Windows** | x64 / arm64 | Windows 10+  | ✓           |
+| **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
+| **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
+
+## 📋 Plateforme supportés - hiredis (seulement pour Windows / macOS, puisque Linux est facilement compilable dans un CMakelists.txt) :
+
+| Platform | Architectures | System Version | Compatible |
+|----------|---------------|----------------|------------|
+| **Windows** | x64 | Windows 10+  | ✓           |
+| **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
+
+## 📋 Plateforme supportés - nats client c (seulement pour Windows / macOS, puisque Linux est facilement compilable dans un CMakelists.txt) :
 
 | Platform | Architectures | System Version | Compatible |
 |----------|---------------|----------------|------------|

@@ -17,6 +17,8 @@ env:
   SDL_SHADERCROSS_TAG: "7b7365a86611b2a7b6462e521cf1c43a037d0970"
   NATS_CLIENT_C_TAG: "v3.12.0"
   HI_REDIS_TAG: "v1.3.0"
+  GRPC_TAG: "v1.76.0"
+  AGONES_TAG: "v1.55.0"
   ANDROID_API: "28" # C'est la version minimale ciblé pour Android
   ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
@@ -83,6 +85,24 @@ jobs:
             shell: bash
       fail-fast: false
     steps:
+      - name: Checkout gRPC - Server Platforms
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
+        uses: actions/checkout@v6
+        with:
+          repository: grpc/grpc
+          ref: ${{ env.GRPC_TAG }}
+          path: grpc-src
+          submodules: recursive
+
+      - name: Checkout Agones - Server Platforms
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
+        uses: actions/checkout@v6
+        with:
+          repository: googleforgames/agones
+          ref: ${{ env.AGONES_TAG }}
+          path: agones-src
+          submodules: recursive
+
       - name: Checkout ONNX Runtime - All Platforms
         uses: actions/checkout@v6
         with:
@@ -253,6 +273,123 @@ jobs:
             ndk;${{ env.ANDROID_NDK_VERSION }}
             cmake;${{ env.ANDROID_CMAKE_VERSION }}
             cmdline-tools;${{ env.ANDROID_CMDLINE_TOOLS_VERSION }}
+
+      - name: Build gRPC + Protobuf - Linux (x64/arm64) / macOS (arm64)
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
+        shell: bash
+        run: |
+          cd grpc-src
+          mkdir -p cmake/build
+          cd cmake/build
+
+          cmake ../.. \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DgRPC_INSTALL=ON \
+            -DgRPC_BUILD_TESTS=OFF \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/grpc-prefix" \
+            ${{ matrix.platform == 'macos' && format('-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET={0}', env.MACOS_TARGET_MIN_VERSION_OS) || '' }}
+
+          cmake --build . --parallel
+          cmake --install .
+
+      - name: Build gRPC + Protobuf - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+          cd grpc-src
+          mkdir cmake\build
+          cd cmake\build
+
+          cmake ..\.. -G "Visual Studio 17 2022" -A x64 ^
+            -DgRPC_INSTALL=ON ^
+            -DgRPC_BUILD_TESTS=OFF ^
+            -DCMAKE_CXX_STANDARD=17 ^
+            -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\grpc-prefix"
+
+          cmake --build . --config Release --target install -j 4
+
+      - name: Build gRPC + Protobuf - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+          cd grpc-src
+          mkdir cmake\build
+          cd cmake\build
+
+          cmake ..\.. -G "Visual Studio 17 2022" -A ARM64 ^
+            -DgRPC_INSTALL=ON ^
+            -DgRPC_BUILD_TESTS=OFF ^
+            -DCMAKE_CXX_STANDARD=17 ^
+            -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\grpc-prefix"
+
+          cmake --build . --config Release --target install -j 4
+
+      - name: Build Agones C++ SDK - Linux (x64/arm64) / macOS (arm64)
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
+        shell: bash
+        run: |
+          cd agones-src/sdks/cpp
+          mkdir -p .build
+          cd .build
+
+          cmake .. \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/grpc-prefix" \
+            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/agones-prefix" \
+            ${{ matrix.platform == 'macos' && format('-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET={0}', env.MACOS_TARGET_MIN_VERSION_OS) || '' }}
+
+          cmake --build . --target install --parallel
+
+      - name: Build Agones C++ SDK - Windows (x64)
+        if: matrix.platform == 'windows-x64'
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+          cd agones-src\sdks\cpp
+          md .build
+          cd .build
+
+          cmake .. -G "Visual Studio 17 2022" -A x64 ^
+            -DCMAKE_PREFIX_PATH="%GITHUB_WORKSPACE%\grpc-prefix" ^
+            -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\agones-prefix"
+
+          cmake --build . --config Release --target install -j 4
+
+      - name: Build Agones C++ SDK - Windows (arm64)
+        if: matrix.platform == 'windows-arm64'
+        shell: cmd
+        run: |
+          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+          cd agones-src\sdks\cpp
+          md .build
+          cd .build
+
+          cmake .. -G "Visual Studio 17 2022" -A ARM64 ^
+            -DCMAKE_PREFIX_PATH="%GITHUB_WORKSPACE%\grpc-prefix" ^
+            -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\agones-prefix"
+
+          cmake --build . --config Release --target install -j 4
+
+      - name: Upload gRPC Artifacts
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
+        uses: actions/upload-artifact@v7
+        with:
+          name: grpc-${{ matrix.platform }}
+          if-no-files-found: error
+          path: grpc-prefix
+
+      - name: Upload Agones Artifacts
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
+        uses: actions/upload-artifact@v7
+        with:
+          name: agones-${{ matrix.platform }}
+          if-no-files-found: error
+          path: agones-prefix
 
       - name: Build libsodium (static + /MD) with vcpkg - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -1039,7 +1176,7 @@ jobs:
 
       - name: Upload hiredis Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: hiredis-macos-arm64
           if-no-files-found: error
@@ -1054,7 +1191,7 @@ jobs:
 
       - name: Upload hiredis Artifacts - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: hiredis-windows-arm64
           if-no-files-found: error
@@ -1069,7 +1206,7 @@ jobs:
 
       - name: Upload hiredis Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: hiredis-windows-x64
           if-no-files-found: error
@@ -1084,7 +1221,7 @@ jobs:
 
       - name: Upload NATS Client C Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: nats-macos-arm64
           if-no-files-found: error
@@ -1096,7 +1233,7 @@ jobs:
 
       - name: Upload NATS Client C Artifacts - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: nats-windows-arm64
           if-no-files-found: error
@@ -1108,7 +1245,7 @@ jobs:
 
       - name: Upload NATS Client C Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: nats-windows-x64
           if-no-files-found: error
