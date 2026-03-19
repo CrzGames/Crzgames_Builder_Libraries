@@ -78,7 +78,7 @@ Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2D / Crzgames
 
 | Platform | Architectures | System Version | Compatible |
 |----------|---------------|----------------|------------|
-| **Windows** | x64 / arm64 | Windows 10+  | ✓           |
+| **Windows** | x64 | Windows 10+  | ✓           |
 | **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
 | **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
 
@@ -86,7 +86,7 @@ Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2D / Crzgames
 
 | Platform | Architectures | System Version | Compatible |
 |----------|---------------|----------------|------------|
-| **Windows** | x64 / arm64 | Windows 10+  | ✓           |
+| **Windows** | x64 | Windows 10+  | ✓           |
 | **macOS** | Apple Silicon arm64 | macOS 15.0+ | ✓ |
 | **Linux** | x64 / arm64 | glibc 2.35+ | ✓ |
 
