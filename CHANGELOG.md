@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.3.7...v1.4.0) (2026-03-19)
+
+
+### Features
+
+* add grpc and sdk agones client c++ ([ab1bcca](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/ab1bccac1a4e9b7aac15ce5c5b4c6146be496ca5))
+
+
+### Bug Fixes
+
+* xx ([0e38471](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/0e38471e5d184069aabc64c7a89cf8a3806e9204))
+
 ## [1.3.7](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.3.6...v1.3.7) (2026-03-03)
 
 
