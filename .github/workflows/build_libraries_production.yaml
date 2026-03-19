@@ -117,6 +117,7 @@ jobs:
           repository: jedisct1/libsodium
           ref: ${{ env.LIBSODIUM_TAG }}
           path: libsodium-src
+          submodules: recursive
 
       - name: Checkout OpenSSL - All Platforms (except macOS / iOS)
         if: matrix.platform != 'macos' && matrix.platform != 'ios'
@@ -125,6 +126,7 @@ jobs:
           repository: openssl/openssl
           ref: ${{ env.OPENSSL_TAG }}
           path: openssl-src
+          submodules: recursive
 
       - name: Checkout OpenSSL - macOS (arm64) / iOS (arm64)
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
@@ -133,7 +135,8 @@ jobs:
           repository: krzyzanowskim/OpenSSL
           ref: ${{ env.OPENSSL_APPLE_TAG }}
           path: openssl-src
-      
+          submodules: recursive
+
       - name: Checkout SDL3_shadercross - All Platforms (except iOS / Android)
         if: matrix.platform != 'ios' && matrix.platform != 'android'
         uses: actions/checkout@v6
@@ -150,6 +153,7 @@ jobs:
           repository: nats-io/nats.c
           path: nats-client-c-src
           ref: ${{ env.NATS_CLIENT_C_TAG }}
+          submodules: recursive
 
       - name: Checkout hiredis - Windows (x64/arm64) / macOS
         if: matrix.platform == 'windows-x64' || matrix.platform == 'windows-arm64' || matrix.platform == 'macos'
@@ -158,6 +162,7 @@ jobs:
           repository: redis/hiredis
           path: hiredis-src
           ref: ${{ env.HI_REDIS_TAG }}
+          submodules: recursive
 
       - name: Install autotools deps (for libsodium) - Linux / SteamRT4
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
