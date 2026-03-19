@@ -1039,7 +1039,7 @@ jobs:
 
       - name: Upload hiredis Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: hiredis-macos-arm64
           if-no-files-found: error
@@ -1054,7 +1054,7 @@ jobs:
 
       - name: Upload hiredis Artifacts - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: hiredis-windows-arm64
           if-no-files-found: error
@@ -1069,7 +1069,7 @@ jobs:
 
       - name: Upload hiredis Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: hiredis-windows-x64
           if-no-files-found: error
@@ -1084,7 +1084,7 @@ jobs:
 
       - name: Upload NATS Client C Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: nats-macos-arm64
           if-no-files-found: error
@@ -1096,7 +1096,7 @@ jobs:
 
       - name: Upload NATS Client C Artifacts - Windows (arm64)
         if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: nats-windows-arm64
           if-no-files-found: error
@@ -1108,7 +1108,7 @@ jobs:
 
       - name: Upload NATS Client C Artifacts - Windows (x64)
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: nats-windows-x64
           if-no-files-found: error
