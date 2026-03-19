@@ -164,7 +164,7 @@ jobs:
           ref: ${{ env.HI_REDIS_TAG }}
           submodules: recursive
 
-      - name: Install autotools deps (for libsodium) - Linux / SteamRT4
+      - name: Install autotools deps (for libsodium/grpc) - Linux / SteamRT4
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
         run: |
           sudo apt-get update -y
