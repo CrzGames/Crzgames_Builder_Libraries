@@ -19,7 +19,7 @@ env:
   HI_REDIS_TAG: "v1.3.0"
   GRPC_TAG: "v1.76.0"
   AGONES_TAG: "v1.55.0"
-  ANDROID_API: "28" # C'est la version minimale cibléee pour Android
+  ANDROID_API: "28" # C'est la version minimale ciblée pour Android
   ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
   ANDROID_BUILD_TOOLS_VERSION: "36.1.0"
