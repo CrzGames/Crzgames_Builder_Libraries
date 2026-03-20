@@ -293,6 +293,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DgRPC_INSTALL=ON \
             -DgRPC_BUILD_TESTS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
+            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/grpc-prefix" \
             ${{ matrix.platform == 'macos' && format('-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET={0}', env.MACOS_TARGET_MIN_VERSION_OS) || '' }}
@@ -312,10 +314,14 @@ jobs:
           cmake ..\.. -G "Visual Studio 17 2022" -A x64 ^
             -DgRPC_INSTALL=ON ^
             -DgRPC_BUILD_TESTS=OFF ^
+            -DBUILD_SHARED_LIBS=OFF ^
+            -Dprotobuf_BUILD_SHARED_LIBS=OFF ^
+            -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
+            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
             -DCMAKE_CXX_STANDARD=17 ^
             -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\grpc-prefix"
 
-          cmake --build . --config Release --target install -j 4
+          cmake --build . --config Release --target install --parallel
 
       - name: Build Agones SDK Client C++ - Linux (x64/arm64) / macOS (arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
@@ -347,7 +353,23 @@ jobs:
             -DCMAKE_PREFIX_PATH="%GITHUB_WORKSPACE%\grpc-prefix" ^
             -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\agones-prefix"
 
-          cmake --build . --config Release --target install -j 4
+          cmake --build . --config Release --target install --parallel
+
+      - name: Upload gRPC Artifacts
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
+        uses: actions/upload-artifact@v7
+        with:
+          name: grpc-${{ matrix.platform }}
+          if-no-files-found: error
+          path: grpc-prefix
+
+      - name: Upload Agones Artifacts
+        if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
+        uses: actions/upload-artifact@v7
+        with:
+          name: agones-${{ matrix.platform }}
+          if-no-files-found: error
+          path: agones-prefix
 
       - name: Build libsodium (static + /MD) with vcpkg - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -1138,22 +1160,6 @@ jobs:
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime build-onnxruntime/lib/libonnxruntime.a
           cp -a build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/Headers/* build-onnxruntime/include/onnxruntime
         shell: bash
-
-      - name: Upload gRPC Artifacts
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
-        uses: actions/upload-artifact@v7
-        with:
-          name: grpc-${{ matrix.platform }}
-          if-no-files-found: error
-          path: grpc-prefix
-
-      - name: Upload Agones Artifacts
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
-        uses: actions/upload-artifact@v7
-        with:
-          name: agones-${{ matrix.platform }}
-          if-no-files-found: error
-          path: agones-prefix
 
       - name: Upload hiredis Artifacts - macOS (arm64)
         if: matrix.platform == 'macos'
