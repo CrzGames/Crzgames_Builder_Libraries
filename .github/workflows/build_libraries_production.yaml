@@ -321,7 +321,11 @@ jobs:
             -DCMAKE_CXX_STANDARD=17 ^
             -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\grpc-prefix"
 
-          cmake --build . --config Release --target install --parallel
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+
+          cmake --build . --config Debug --parallel
+          cmake --install . --config Debug          
 
       - name: Build Agones SDK Client C++ - Linux (x64/arm64) / macOS (arm64)
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
@@ -334,6 +338,8 @@ jobs:
           cmake .. \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
+            -DProtobuf_DIR="$GITHUB_WORKSPACE/grpc-prefix/lib/cmake/protobuf" \
+            -DgRPC_DIR="$GITHUB_WORKSPACE/grpc-prefix/lib/cmake/grpc" \
             -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/grpc-prefix" \
             -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/agones-prefix" \
             ${{ matrix.platform == 'macos' && format('-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET={0}', env.MACOS_TARGET_MIN_VERSION_OS) || '' }}
@@ -357,7 +363,11 @@ jobs:
             -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
             -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\agones-prefix"
 
-          cmake --build . --config Release --target install --parallel
+          cmake --build . --config Release --parallel
+          cmake --install . --config Release
+
+          cmake --build . --config Debug --parallel
+          cmake --install . --config Debug
 
       - name: Upload gRPC Artifacts
         if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
