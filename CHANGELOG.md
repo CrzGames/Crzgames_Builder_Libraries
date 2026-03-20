@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.4](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.4.3...v1.4.4) (2026-03-20)
+
+
+### Bug Fixes
+
+* xx ([78efa00](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/78efa009de43b1f5dfed124242713a2c054fa37f))
+
 ## [1.4.3](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.4.2...v1.4.3) (2026-03-20)
 
 
