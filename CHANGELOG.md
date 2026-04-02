@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.4.4...v1.5.0) (2026-04-02)
+
+
+### Features
+
+* update sdl3_shadercross ([ee2f25f](https://github.com/CrzGames/Crzgames_Builder_Libraries/commit/ee2f25fa3f8a6d13336de54b2f82afe9f5b74f9c))
+
 ## [1.4.4](https://github.com/CrzGames/Crzgames_Builder_Libraries/compare/v1.4.3...v1.4.4) (2026-03-20)
 
 
