@@ -15,7 +15,7 @@ Ce dépôt build les bibliothèques des dépendences de Crzgames_RC2D / Crzgames
 |----------|---------|
 | **Onnx Runtime** | v1.24.1 |
 | **OpenSSL** | v3.6.1 |
-| **SDL3_shadercross** | commit_sha: 7b7365a86611b2a7b6462e521cf1c43a037d0970 |
+| **SDL3_shadercross** | commit_sha: 3a314481ede01f5d966f0e834019942e34c02b82 |
 | **NATS Client C** | v3.12.0 |
 | **hiredis** | v1.3.0 |
 | **libsodium** | v1.0.21 |
