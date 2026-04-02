@@ -14,11 +14,9 @@ env:
   OPENSSL_TAG: "openssl-3.6.1"
   OPENSSL_APPLE_TAG: "3.6.0001"
   ONNXRUNTIME_TAG: "v1.24.2"
-  SDL_SHADERCROSS_TAG: "7b7365a86611b2a7b6462e521cf1c43a037d0970"
+  SDL_SHADERCROSS_TAG: "3a314481ede01f5d966f0e834019942e34c02b82"
   NATS_CLIENT_C_TAG: "v3.12.0"
   HI_REDIS_TAG: "v1.3.0"
-  GRPC_TAG: "v1.76.0"
-  AGONES_TAG: "v1.55.0"
   ANDROID_API: "28" # C'est la version minimale cibléee pour Android
   ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_PLATFORM_VERSION: "android-36"
@@ -85,24 +83,6 @@ jobs:
             shell: bash
       fail-fast: false
     steps:
-      - name: Checkout gRPC - Windows (x64) / Linux (x64/arm64) / macOS (arm64)
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
-        uses: actions/checkout@v6
-        with:
-          repository: grpc/grpc
-          ref: ${{ env.GRPC_TAG }}
-          path: grpc-src
-          submodules: recursive
-
-      - name: Checkout Agones - Windows (x64/arm64) / Linux (x64/arm64) / macOS (arm64)
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
-        uses: actions/checkout@v6
-        with:
-          repository: googleforgames/agones
-          ref: ${{ env.AGONES_TAG }}
-          path: agones-src
-          submodules: recursive
-
       - name: Checkout ONNX Runtime - All Platforms
         uses: actions/checkout@v6
         with:
@@ -164,7 +144,7 @@ jobs:
           ref: ${{ env.HI_REDIS_TAG }}
           submodules: recursive
 
-      - name: Install autotools deps (for libsodium/grpc) - Linux / SteamRT4
+      - name: Install autotools deps (for libsodium) - Linux / SteamRT4
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'steamrt4-x64' || matrix.platform == 'steamrt4-arm64'
         run: |
           sudo apt-get update -y
@@ -279,111 +259,6 @@ jobs:
             ndk;${{ env.ANDROID_NDK_VERSION }}
             cmake;${{ env.ANDROID_CMAKE_VERSION }}
             cmdline-tools;${{ env.ANDROID_CMDLINE_TOOLS_VERSION }}
-
-      - name: Build gRPC + Protobuf (for Agones SDK Client C++) - Linux (x64/arm64) / macOS (arm64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
-        shell: bash
-        run: |
-          cd grpc-src
-          mkdir -p cmake/build
-          cd cmake/build
-
-          cmake ../.. \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DgRPC_INSTALL=ON \
-            -DgRPC_BUILD_TESTS=OFF \
-            -DBUILD_SHARED_LIBS=OFF \
-            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/grpc-prefix" \
-            ${{ matrix.platform == 'macos' && format('-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET={0}', env.MACOS_TARGET_MIN_VERSION_OS) || '' }}
-
-          cmake --build . --parallel
-          cmake --install .
-
-      - name: Build gRPC + Protobuf (for Agones SDK Client C++) - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        shell: cmd
-        run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
-          cd grpc-src
-          mkdir cmake\build
-          cd cmake\build
-
-          cmake ..\.. -G "Visual Studio 17 2022" -A x64 ^
-            -DgRPC_INSTALL=ON ^
-            -DgRPC_BUILD_TESTS=OFF ^
-            -DBUILD_SHARED_LIBS=OFF ^
-            -Dprotobuf_BUILD_SHARED_LIBS=OFF ^
-            -Dprotobuf_MSVC_STATIC_RUNTIME=OFF ^
-            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
-            -DCMAKE_CXX_STANDARD=17 ^
-            -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\grpc-prefix"
-
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-
-          cmake --build . --config Debug --parallel
-          cmake --install . --config Debug          
-
-      - name: Build Agones SDK Client C++ - Linux (x64/arm64) / macOS (arm64)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
-        shell: bash
-        run: |
-          cd agones-src/sdks/cpp
-          mkdir -p .build
-          cd .build
-
-          cmake .. \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DProtobuf_DIR="$GITHUB_WORKSPACE/grpc-prefix/lib/cmake/protobuf" \
-            -DgRPC_DIR="$GITHUB_WORKSPACE/grpc-prefix/lib/cmake/grpc" \
-            -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/grpc-prefix" \
-            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/agones-prefix" \
-            ${{ matrix.platform == 'macos' && format('-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET={0}', env.MACOS_TARGET_MIN_VERSION_OS) || '' }}
-
-          cmake --build . --target install --parallel
-
-      - name: Build Agones SDK Client C++ - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        shell: cmd
-        run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
-          cd agones-src\sdks\cpp
-          md .build
-          cd .build
-
-          cmake .. -G "Visual Studio 17 2022" -A x64 ^
-            -DCMAKE_PREFIX_PATH="%GITHUB_WORKSPACE%\grpc-prefix" ^
-            -DProtobuf_DIR="%GITHUB_WORKSPACE%\grpc-prefix\lib\cmake\protobuf" ^
-            -DgRPC_DIR="%GITHUB_WORKSPACE%\grpc-prefix\lib\cmake\grpc" ^
-            -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON ^
-            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" ^
-            -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\agones-prefix"
-
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-
-          cmake --build . --config Debug --parallel
-          cmake --install . --config Debug
-
-      - name: Upload gRPC Artifacts
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
-        uses: actions/upload-artifact@v7
-        with:
-          name: grpc-${{ matrix.platform }}
-          if-no-files-found: error
-          path: grpc-prefix
-
-      - name: Upload Agones Artifacts
-        if: matrix.platform == 'windows-x64' || matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64' || matrix.platform == 'macos'
-        uses: actions/upload-artifact@v7
-        with:
-          name: agones-${{ matrix.platform }}
-          if-no-files-found: error
-          path: agones-prefix
 
       - name: Build libsodium (static + /MD) with vcpkg - Windows (x64)
         if: matrix.platform == 'windows-x64'
@@ -1256,21 +1131,21 @@ jobs:
             nats-client-c-src/src/version.h
             nats-client-c-src/src/status.h
 
-      - name: Upload libsodium Artifacts - Windows (x64)
-        if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v7
-        with:
-          name: libsodium-windows-x64
-          if-no-files-found: error
-          path: libsodium-artifact-windows-x64
+      #- name: Upload libsodium Artifacts - Windows (x64)
+      #  if: matrix.platform == 'windows-x64'
+      #  uses: actions/upload-artifact@v7
+      #  with:
+      #    name: libsodium-windows-x64
+      #    if-no-files-found: error
+      #    path: libsodium-artifact-windows-x64
 
-      - name: Upload libsodium Artifacts - Windows (arm64)
-        if: matrix.platform == 'windows-arm64'
-        uses: actions/upload-artifact@v7
-        with:
-          name: libsodium-windows-arm64
-          if-no-files-found: error
-          path: libsodium-artifact-windows-arm64
+      #- name: Upload libsodium Artifacts - Windows (arm64)
+      #  if: matrix.platform == 'windows-arm64'
+      #  uses: actions/upload-artifact@v7
+      #  with:
+      #    name: libsodium-windows-arm64
+      #    if-no-files-found: error
+      #    path: libsodium-artifact-windows-arm64
 
       - name: Upload libsodium Artifacts - Linux (x64)
         if: matrix.platform == 'linux-x64'
