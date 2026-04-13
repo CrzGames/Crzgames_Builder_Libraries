@@ -1553,7 +1553,7 @@ jobs:
           echo "- nats-client-c: $NATS_CLIENT_C_VERSION" >> release_notes.md
           
       - name: Deploy assets to GitHub Releases
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             openssl-linux.zip
